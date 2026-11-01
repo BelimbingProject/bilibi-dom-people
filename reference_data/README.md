@@ -3,7 +3,7 @@
 Module ID: `people/reference_data`, crate `bilibi-people-reference-data`. A
 company's People reference entries, their aliases and its calendar
 exceptions. The Bilimbi source it ports is
-[`reference_data/docs/README.md`](https://github.com/BelimbingApp/b-dom-people/blob/main/reference_data/docs/README.md).
+[`reference_data/docs/README.md`](https://github.com/BelimbingProject/b-dom-people/blob/main/reference_data/docs/README.md).
 Other People modules read through the `ReferenceData` facade; none reads its
 tables. It depends on `people/workforce` (its `Authorization` helpers and
 error types) and `people/settings` (the menu group).

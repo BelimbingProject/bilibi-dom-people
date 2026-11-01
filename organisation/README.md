@@ -4,7 +4,7 @@ Module ID: `people/organisation`, crate `bilibi-people-organisation`. A
 company's positions, their immutable effective-dated title versions and the
 effective-dated assignments of employees to them. This README is the owner
 contract; the Bilimbi source it ports is
-[`organisation/docs/README.md`](https://github.com/BelimbingApp/b-dom-people/blob/main/organisation/docs/README.md).
+[`organisation/docs/README.md`](https://github.com/BelimbingProject/b-dom-people/blob/main/organisation/docs/README.md).
 
 Open `/people/organisation` from **People → Team → Organisation** to see a company's positions and holders on a chosen date. Choose an active company and an **As of** date; the table shows title, parent, holders and vacancy. Pages contain 50 positions by default, with 25, 50 and 100 available. Table settings let you choose columns and compact rows.
 

@@ -1,6 +1,6 @@
 # Training
 
-Module ID: `people/training`, crate `bilibi-people-training`. Training manages a company's course catalog, events, sessions, learning requests, team plans and budgets. Other People modules and pages use its public methods; the schema stays private. The behaviour reference is [Bilimbi Training](https://github.com/BelimbingApp/b-dom-people/blob/main/training/docs/README.md).
+Module ID: `people/training`, crate `bilibi-people-training`. Training manages a company's course catalog, events, sessions, learning requests, team plans and budgets. Other People modules and pages use its public methods; the schema stays private. The behaviour reference is [Bilimbi Training](https://github.com/BelimbingProject/b-dom-people/blob/main/training/docs/README.md).
 
 The catalog, attendance records, private evidence and governance methods are implemented, along with the Learning request, plan and budget pages, Courses, Sessions & calendar, and the records and passport pages below. Evaluation and Learning insights are PT9. An administrator grants Training access; no Training grant is added to a system role.
 

@@ -8,7 +8,7 @@ helpers every People facade authorizes through, self-service, and the
 position scan Organisation answers. Other People modules read and write
 through this module's facade; none of them reads its table. This README is
 the owner contract; the Bilimbi source it ports is
-[`workforce/docs/README.md`](https://github.com/BelimbingApp/b-dom-people/blob/main/workforce/docs/README.md).
+[`workforce/docs/README.md`](https://github.com/BelimbingProject/b-dom-people/blob/main/workforce/docs/README.md).
 
 The settings page is `/people/workforce/settings`. The People connector reads company identities and bounded employee and position pages through `people/workforce.directory`.
 
