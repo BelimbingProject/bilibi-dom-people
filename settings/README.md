@@ -4,7 +4,7 @@ Module ID: `people/settings`, crate `bilibi-people-settings`. The People
 navigation outline: the `people` menu root and the seven groups every other
 People module hangs its leaves on. It owns no table, page, setting or
 service. This README is the owner contract; the Bilimbi source it ports is
-[`settings/docs/README.md`](https://github.com/BelimbingApp/b-dom-people/blob/main/settings/docs/README.md).
+[`settings/docs/README.md`](https://github.com/BelimbingProject/b-dom-people/blob/main/settings/docs/README.md).
 
 ## Menu
 
@@ -30,7 +30,7 @@ Base Menu hides a container without a visible child
 therefore shows no People entry at all, which is the expected state of the
 scaffold.
 
-Menu icons are bare Heroicon names (`users`, `cog-6-tooth`), rendered as inline SVG by the Platform (see [Icons](https://github.com/BelimbingApp/bilibi/blob/main/apps/base/ui/README.md#icons)). An unknown name shows a missing-icon glyph and logs a warning.
+Menu icons are bare Heroicon names (`users`, `cog-6-tooth`), rendered as inline SVG by the Platform (see [Icons](https://github.com/BelimbingProject/bilibi/blob/main/apps/base/ui/README.md#icons)). An unknown name shows a missing-icon glyph and logs a warning.
 
 ## Dependencies
 

@@ -1,6 +1,6 @@
 # Attendance
 
-Module ID: `people/attendance`, crate `bilibi-people-attendance`. Time and attendance: a company's clock facts and the days projected from them, its shift templates, its clocking locations and its attendance rules. It also plans and publishes rosters, handles missing-punch requests, and stores allowance rule versions. Settings, roster planner, attendance approvals and self-service pages are available. The device operation is available through Agent API. This README is the owner contract; the Bilimbi source it ports is [`attendance/docs/README.md`](https://github.com/BelimbingApp/b-dom-people/blob/main/attendance/docs/README.md).
+Module ID: `people/attendance`, crate `bilibi-people-attendance`. Time and attendance: a company's clock facts and the days projected from them, its shift templates, its clocking locations and its attendance rules. It also plans and publishes rosters, handles missing-punch requests, and stores allowance rule versions. Settings, roster planner, attendance approvals and self-service pages are available. The device operation is available through Agent API. This README is the owner contract; the Bilimbi source it ports is [`attendance/docs/README.md`](https://github.com/BelimbingProject/b-dom-people/blob/main/attendance/docs/README.md).
 
 ## Public API
 

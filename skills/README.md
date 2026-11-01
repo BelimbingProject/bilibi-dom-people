@@ -4,7 +4,7 @@ Module ID: `people/skills`, crate `bilibi-people-skills`. A company's skill
 catalog, its versioned proficiency scales, its versioned requirement
 profiles and the policy values that steer assessments. This README is the
 owner contract; the Bilimbi source it ports is
-[`skills/docs/README.md`](https://github.com/BelimbingApp/b-dom-people/blob/main/skills/docs/README.md).
+[`skills/docs/README.md`](https://github.com/BelimbingProject/b-dom-people/blob/main/skills/docs/README.md).
 
 The catalog, assessments, reassessments and development actions (PK1–PK3) include both migrations, the seven policy settings, evidence-backed assessments, independent decisions, current scores, standing reads and action events. Reminders (PK7) use the ledger created by migration 002. Development actions (`/people/skills/actions`) and Skills policy (`/people/skills/policy`) are available with their menu entries (PK6). Catalog and profile pages belong to PK4; Assessments and My skills belong to PK5.
 

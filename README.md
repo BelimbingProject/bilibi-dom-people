@@ -1,10 +1,10 @@
 # bilibi-dom-people
 
-People Domain for [Bilibi](https://github.com/BelimbingApp/bilibi): a
+People Domain for [Bilibi](https://github.com/BelimbingProject/bilibi): a
 company's workforce, from employment records and attendance to leave,
 claims, skills, training, performance, progression and payroll, ported with
 UI parity from Bilimbi's
-[b-dom-people](https://github.com/BelimbingApp/b-dom-people). It is one
+[b-dom-people](https://github.com/BelimbingProject/b-dom-people). It is one
 optional, independently versioned repository that an adopter mounts into a
 Bilibi checkout; it does not build on its own.
 
@@ -30,7 +30,7 @@ Clone this repository into a Bilibi checkout at `apps/domains/people` (a
 real nested checkout, never a symlink) and work from the Bilibi root:
 
 ```sh
-git clone https://github.com/BelimbingApp/bilibi-dom-people.git apps/domains/people
+git clone https://github.com/BelimbingProject/bilibi-dom-people.git apps/domains/people
 python3 scripts/discover-modules.py
 cargo run -p bilibi-web -- migrate
 ```
