@@ -1,8 +1,8 @@
 //! PL5 runtime proof through the real registry and reviewed write service.
 //! Uses disposable fixture credentials; never prints credentials.
 use bilibi_agent_api::{
-    Registry,
     plans::{PlanAuthority, PlanIdentity, PlannedOperation, Plans},
+    Registry,
 };
 use bilibi_authz::grants::Grants;
 use bilibi_database::{Db, Error, Result};
@@ -10,7 +10,7 @@ use bilibi_module_registry::Services;
 use bilibi_people_leave::{Leave, NewLeaveType, POLICIES_MANAGE};
 use bilibi_tenancy::{ProofFuture, Scope};
 use bilibi_user::UserService;
-use serde_json::{Value, json};
+use serde_json::{json, Value};
 use tokio_postgres::Transaction;
 
 const KEY: &str = "people.leave.entry.record";
