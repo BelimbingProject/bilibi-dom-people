@@ -2,12 +2,12 @@
 //! Creates its own people and records through the public owners; no fixture accounts.
 use bilibi_agent_api::plans::{PlanAuthority, PlanIdentity, PlannedOperation, Plans};
 use bilibi_authz::grants::Grants;
-use bilibi_database::{pool, Error, Result};
+use bilibi_database::{Error, Result, pool};
 use bilibi_module_registry::Services;
 use bilibi_people_workforce::{NewEmployment, Workforce};
 use bilibi_tenancy::{ProofFuture, Scope};
 use bilibi_user::UserService;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::sync::Arc;
 use tokio_postgres::Transaction;
 
@@ -55,9 +55,8 @@ async fn operation(services: &Services, email: &str, key: &str, input: Value) ->
     if preview["valid"] != true {
         return Err(fail(format!("{key}: invalid preview")));
     }
-    let code = preview["plan_code"].as_str().ok_or(Error::Invalid)?;
     plans
-        .commit(&scope, &authority, code, &operations)
+        .commit(&scope, &authority, &operations)
         .await
         .map_err(fail)?;
     println!("agent preview and commit passed: {key}");

@@ -1,8 +1,8 @@
-//! PL5 runtime proof through the real registry and reviewed plan service.
-//! Uses disposable fixture credentials; never prints credentials or plan codes.
+//! PL5 runtime proof through the real registry and reviewed write service.
+//! Uses disposable fixture credentials; never prints credentials.
 use bilibi_agent_api::{
-    plans::{PlanAuthority, PlanIdentity, PlannedOperation, Plans},
     Registry,
+    plans::{PlanAuthority, PlanIdentity, PlannedOperation, Plans},
 };
 use bilibi_authz::grants::Grants;
 use bilibi_database::{Db, Error, Result};
@@ -10,7 +10,7 @@ use bilibi_module_registry::Services;
 use bilibi_people_leave::{Leave, NewLeaveType, POLICIES_MANAGE};
 use bilibi_tenancy::{ProofFuture, Scope};
 use bilibi_user::UserService;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use tokio_postgres::Transaction;
 
 const KEY: &str = "people.leave.entry.record";
@@ -40,23 +40,16 @@ fn op(input: Value) -> PlannedOperation {
         input,
     }
 }
-fn code(plan: &Value) -> Result<&str> {
-    plan["plan_code"].as_str().ok_or(Error::Invalid)
-}
 fn backend(error: bilibi_agent_api::Error) -> Error {
     eprintln!("unexpected operation failure: {error}");
     Error::Invalid
 }
 async fn preview(plans: &Plans, browser: &Browser<'_>, ops: &[PlannedOperation]) -> Result<Value> {
-    let mut plan = plans.preview(browser, ops).await.map_err(backend)?;
-    let secret = plan["plan_code"].take();
+    let plan = plans.preview(browser, ops).await.map_err(backend)?;
     println!(
-        "entry review: valid={} facts={} code issued={}",
-        plan["valid"],
-        plan["results"],
-        secret.is_string()
+        "entry review: valid={} facts={}",
+        plan["valid"], plan["results"]
     );
-    plan["plan_code"] = secret;
     Ok(plan)
 }
 async fn state(db: &Db, source: &str) -> Result<(i64, i64)> {
@@ -124,7 +117,7 @@ pub(super) async fn run(
         registry.call(&**client, &scope, KEY, &input).await
     );
     let ops = [op(input.clone())];
-    let plan = preview(&plans, &browser, &ops).await?;
+    let _review = preview(&plans, &browser, &ops).await?;
     same(
         "preview has no entry writes",
         state(db, "pl5-proof").await?,
@@ -133,20 +126,20 @@ pub(super) async fn run(
     println!(
         "opening commit: {}",
         plans
-            .commit(&scope, &browser, code(&plan)?, &ops)
+            .commit(&scope, &browser, &ops)
             .await
             .map_err(backend)?
     );
     same("opening", state(db, "pl5-proof").await?, (1, 1))?;
     println!(
-        "single-use plan replay: {:?}",
-        plans.commit(&scope, &browser, code(&plan)?, &ops).await
+        "same write replay: {:?}",
+        plans.commit(&scope, &browser, &ops).await
     );
-    let replay = preview(&plans, &browser, &ops).await?;
+    let _review = preview(&plans, &browser, &ops).await?;
     println!(
         "identical entry retry: {}",
         plans
-            .commit(&scope, &browser, code(&replay)?, &ops)
+            .commit(&scope, &browser, &ops)
             .await
             .map_err(backend)?
     );
@@ -160,11 +153,11 @@ pub(super) async fn run(
     adjustment["quantity"] = json!("-0.50");
     adjustment["entry_key"] = json!("adjustment");
     let adjust = [op(adjustment)];
-    let plan = preview(&plans, &browser, &adjust).await?;
+    let _review = preview(&plans, &browser, &adjust).await?;
     println!(
         "adjustment commit: {}",
         plans
-            .commit(&scope, &browser, code(&plan)?, &adjust)
+            .commit(&scope, &browser, &adjust)
             .await
             .map_err(backend)?
     );
@@ -201,10 +194,10 @@ pub(super) async fn run(
     let mut second = first.clone();
     second["quantity"] = json!("8.25");
     let batch = [op(first), op(second)];
-    let review = preview(&plans, &browser, &batch).await?;
+    let _review = preview(&plans, &browser, &batch).await?;
     println!(
         "second operation fails: {:?}",
-        plans.commit(&scope, &browser, code(&review)?, &batch).await
+        plans.commit(&scope, &browser, &batch).await
     );
     same(
         "whole plan rolls back",
@@ -215,7 +208,7 @@ pub(super) async fn run(
     let mut race = input.clone();
     race["entry_key"] = json!("race");
     let race_ops = [op(race)];
-    let a = preview(&plans, &browser, &race_ops).await?;
+    let _first_review = preview(&plans, &browser, &race_ops).await?;
     let second_login = users
         .login("manager@example.test", bilibi_walkthrough_fixture::PASSWORD)
         .await
@@ -224,10 +217,10 @@ pub(super) async fn run(
         users: &users,
         token: &second_login.token,
     };
-    let b = preview(&plans, &second_browser, &race_ops).await?;
+    let _second_review = preview(&plans, &second_browser, &race_ops).await?;
     let (a_result, b_result) = tokio::join!(
-        plans.commit(&scope, &browser, code(&a)?, &race_ops),
-        plans.commit(&scope, &second_browser, code(&b)?, &race_ops),
+        plans.commit(&scope, &browser, &race_ops),
+        plans.commit(&scope, &second_browser, &race_ops),
     );
     println!(
         "competing plans: first={} second={}",
@@ -245,29 +238,25 @@ pub(super) async fn run(
     let mut fresh = input.clone();
     fresh["entry_key"] = json!("revoked");
     let fresh_ops = [op(fresh)];
-    let review = preview(&plans, &browser, &fresh_ops).await?;
+    let _review = preview(&plans, &browser, &fresh_ops).await?;
     grants
         .set_direct(admin, scope.user(), POLICIES_MANAGE, Some(false))
         .await?;
     println!(
         "permission revoked after review: {:?}",
-        plans
-            .commit(&scope, &browser, code(&review)?, &fresh_ops)
-            .await
+        plans.commit(&scope, &browser, &fresh_ops).await
     );
     grants
         .set_direct(admin, scope.user(), POLICIES_MANAGE, Some(true))
         .await?;
-    let review = preview(&plans, &browser, &fresh_ops).await?;
+    let _review = preview(&plans, &browser, &fresh_ops).await?;
     leave
         .set_type_status(&scope, company, leave_type.id, "archived")
         .await
         .map_err(|_| Error::Invalid)?;
     println!(
         "type archived after review: {:?}",
-        plans
-            .commit(&scope, &browser, code(&review)?, &fresh_ops)
-            .await
+        plans.commit(&scope, &browser, &fresh_ops).await
     );
     leave
         .set_type_status(&scope, company, leave_type.id, "active")
