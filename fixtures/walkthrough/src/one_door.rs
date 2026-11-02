@@ -55,9 +55,8 @@ async fn operation(services: &Services, email: &str, key: &str, input: Value) ->
     if preview["valid"] != true {
         return Err(fail(format!("{key}: invalid preview")));
     }
-    let code = preview["plan_code"].as_str().ok_or(Error::Invalid)?;
     plans
-        .commit(&scope, &authority, code, &operations)
+        .commit(&scope, &authority, &operations)
         .await
         .map_err(fail)?;
     println!("agent preview and commit passed: {key}");
