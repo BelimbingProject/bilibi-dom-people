@@ -236,7 +236,10 @@ impl ProfilePage {
                                 criticality: text(p, "item[criticality]").into(),
                                 weight_percent: weight,
                                 mandatory: text(p, "item[mandatory]") == "true",
-                                evidence_standard: optional(text(p, "item[evidence_standard]")),
+                                evidence_standard: bilibi_ui::params::blank_to_none(Some(text(
+                                    p,
+                                    "item[evidence_standard]",
+                                ))),
                             },
                         )
                         .await

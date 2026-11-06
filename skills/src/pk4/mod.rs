@@ -427,9 +427,6 @@ fn id(v: &Value, key: &str) -> Option<i64> {
 fn integer(v: &Value, key: &str) -> i32 {
     text(v, key).trim().parse().unwrap_or(-1)
 }
-fn optional(value: &str) -> Option<String> {
-    (!value.trim().is_empty()).then(|| value.trim().to_owned())
-}
 fn row(prefix: &str, id: impl ToString) -> FlexRow {
     FlexRow {
         dom_id: Some(format!("{prefix}-{}", id.to_string())),

@@ -310,9 +310,6 @@ fn label(value: &str) -> String {
         .map(|x| x.to_uppercase().collect::<String>() + c.as_str())
         .unwrap_or_default()
 }
-fn optional(value: &str) -> Option<String> {
-    (!value.trim().is_empty()).then(|| value.trim().to_owned())
-}
 fn date(value: &str) -> crate::Result<Option<jiff::civil::Date>> {
     if value.trim().is_empty() {
         Ok(None)

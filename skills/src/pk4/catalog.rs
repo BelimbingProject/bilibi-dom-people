@@ -287,7 +287,10 @@ impl Catalog {
                         &NewCategory {
                             code: text(p, "category[code]").into(),
                             name: text(p, "category[name]").into(),
-                            description: optional(text(p, "category[description]")),
+                            description: bilibi_ui::params::blank_to_none(Some(text(
+                                p,
+                                "category[description]",
+                            ))),
                         },
                     )
                     .await,
@@ -298,13 +301,17 @@ impl Catalog {
             "create_skill" => {
                 let f = "skill-form";
                 self.drafts.remember(f, p);
-                let months = optional(text(p, "skill[reassessment_months]"));
+                let months =
+                    bilibi_ui::params::blank_to_none(Some(text(p, "skill[reassessment_months]")));
                 let new = NewSkill {
                     category_id: id(p, "skill[category_id]").unwrap_or_default(),
                     code: text(p, "skill[code]").into(),
                     name: text(p, "skill[name]").into(),
                     definition: text(p, "skill[definition]").into(),
-                    evidence_guide: optional(text(p, "skill[evidence_guide]")),
+                    evidence_guide: bilibi_ui::params::blank_to_none(Some(text(
+                        p,
+                        "skill[evidence_guide]",
+                    ))),
                     critical: text(p, "skill[critical]") == "true",
                     reassessment_months: months.map(|v| v.parse().unwrap_or(-1)),
                 };
