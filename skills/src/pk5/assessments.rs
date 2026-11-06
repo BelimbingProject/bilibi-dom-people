@@ -244,7 +244,7 @@ impl Assessments {
             self.can_cancel = self.can_request || self.can_perform;
             // Mandatory reads decide availability. Optional capabilities never hide the register.
             let filters = AssessmentFilters {
-                status: optional(&self.status),
+                status: bilibi_ui::params::blank_to_none(Some(&self.status)),
                 ..AssessmentFilters::default()
             };
             let data = async {
@@ -637,8 +637,8 @@ fn assessment_input(draft: &HashMap<String, String>, key: &str) -> crate::Result
         evidence: get("evidence").into(),
         assessed_on: date(get("assessed_on"))?,
         valid_until: date(get("valid_until"))?,
-        method: optional(get("method")),
-        notes: optional(get("notes")),
+        method: bilibi_ui::params::blank_to_none(Some(get("method"))),
+        notes: bilibi_ui::params::blank_to_none(Some(get("notes"))),
         request_key: key.into(),
         supersedes_assessment_id: None,
     })

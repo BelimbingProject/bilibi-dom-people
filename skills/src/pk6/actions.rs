@@ -484,7 +484,7 @@ impl Actions {
             owner_employee_id: required_id("owner_employee_id")?,
             coordinator_employee_id: required_id("coordinator_employee_id")?,
             provider_employee_id: params::positive_id(Some(v("provider_employee_id"))),
-            provider_name: optional(v("provider_name")),
+            provider_name: bilibi_ui::params::blank_to_none(Some(v("provider_name"))),
             objective: v("objective").into(),
             intervention: v("intervention").into(),
             expected_evidence: v("expected_evidence").into(),
