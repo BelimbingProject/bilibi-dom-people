@@ -1141,12 +1141,11 @@ impl Records {
             })
             .collect::<DbResult<Vec<_>>>()?;
         let table = self.table("passport", "passport-records", "Training passport", rows, EmptyState::missing("No training records yet", "An authorized training operator can confirm session attendance and attach evidence."))?;
-        let counts = bilibi_ui::PageCounts {
-            page: passport.page.page as u64,
-            page_size: passport.page.page_size as u64,
-            total_entries: passport.page.total_entries as u64,
-            total_pages: passport.page.total_pages as u64,
-        };
+        let counts = bilibi_ui::PageCounts::new(
+            passport.page.page as u64,
+            passport.page.page_size as u64,
+            passport.page.total_entries as u64,
+        );
         let can_generate = passport.freshness == Freshness::Current && self.can(PASSPORT_GENERATE);
         render(&PassportView {
             employee: &passport.employee.display_name,
