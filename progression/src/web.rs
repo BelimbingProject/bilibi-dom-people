@@ -25,13 +25,13 @@ use std::{
     sync::Arc,
 };
 
-bilibi_ui::record_fields! { mod policy_fields {
-    VERSION: bilibi_ui::RecordField::new("version", "Version"),
-    EFFECTIVE: bilibi_ui::RecordField::new("effective", "Effective from"),
-    PUBLICATION: bilibi_ui::RecordField::new("publication", "Publication"),
-    MISSING: bilibi_ui::RecordField::new("missing_evidence", "Missing released evidence"),
-    PERIODS: bilibi_ui::RecordField::new("periods", "Performance periods").excluded("Policy periods are a nested collection."),
-    OUTCOMES: bilibi_ui::RecordField::new("outcomes", "Accepted outcomes").excluded("Accepted outcomes are a nested collection."),
+bilibi_ui::record_fields! { "people/progression", mod policy_fields {
+    VERSION: bilibi_ui::RecordField::new("version", "Version", bilibi_ui::RecordFieldType::String),
+    EFFECTIVE: bilibi_ui::RecordField::new("effective", "Effective from", bilibi_ui::RecordFieldType::Date),
+    PUBLICATION: bilibi_ui::RecordField::new("publication", "Publication", bilibi_ui::RecordFieldType::String),
+    MISSING: bilibi_ui::RecordField::new("missing_evidence", "Missing released evidence", bilibi_ui::RecordFieldType::String),
+    PERIODS: bilibi_ui::RecordField::new("periods", "Performance periods", bilibi_ui::RecordFieldType::Array).excluded("Policy periods are a nested collection."),
+    OUTCOMES: bilibi_ui::RecordField::new("outcomes", "Accepted outcomes", bilibi_ui::RecordFieldType::Array).excluded("Accepted outcomes are a nested collection."),
 } }
 
 pub(crate) struct Pages {
