@@ -314,10 +314,14 @@ impl Catalog {
             self.modal = None;
         }
         if self.courses_page {
-            self.columns
-                .set_available(&[bilibi_ui::RecordField::new("actions", "Actions")], |_| {
-                    self.can_manage
-                });
+            self.columns.set_available(
+                &[bilibi_ui::RecordField::new(
+                    "actions",
+                    "Actions",
+                    bilibi_ui::RecordFieldType::String,
+                )],
+                |_| self.can_manage,
+            );
             self.list.paginate(&self.courses);
         }
         if !self.courses_page {

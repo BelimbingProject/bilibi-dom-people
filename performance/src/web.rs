@@ -73,16 +73,16 @@ impl UiPage<Scope, Error> for Pages {
 }
 
 // One vocabulary supplies detail labels and optional scalar columns.
-bilibi_ui::record_fields! { mod review_fields {
-    PERIOD: bilibi_ui::RecordField::new("period", "Period"),
-    OUTCOME: bilibi_ui::RecordField::new("outcome", "Outcome"),
-    RATIONALE: bilibi_ui::RecordField::new("rationale", "Rationale").excluded("Long review rationale stays in the detail."),
-    CUTOFF: bilibi_ui::RecordField::new("cutoff", "Cutoff"),
-    CORRECTION: bilibi_ui::RecordField::new("correction", "Correction").excluded("Long correction reasons stay in the detail."),
-    RELEASED: bilibi_ui::RecordField::new("released", "Released"),
-    EVIDENCE: bilibi_ui::RecordField::new("evidence", "Evidence").excluded("Pinned evidence is a nested collection."),
-    TARGET: bilibi_ui::RecordField::new("target", "Target").excluded("Pinned targets are a nested collection."),
-    RESPONSE: bilibi_ui::RecordField::new("response", "Response").excluded("Responses are a nested collection."),
+bilibi_ui::record_fields! { "people/performance", mod review_fields {
+    PERIOD: bilibi_ui::RecordField::new("period", "Period", bilibi_ui::RecordFieldType::String),
+    OUTCOME: bilibi_ui::RecordField::new("outcome", "Outcome", bilibi_ui::RecordFieldType::String),
+    RATIONALE: bilibi_ui::RecordField::new("rationale", "Rationale", bilibi_ui::RecordFieldType::String).excluded("Long review rationale stays in the detail."),
+    CUTOFF: bilibi_ui::RecordField::new("cutoff", "Cutoff", bilibi_ui::RecordFieldType::Date),
+    CORRECTION: bilibi_ui::RecordField::new("correction", "Correction", bilibi_ui::RecordFieldType::String).excluded("Long correction reasons stay in the detail."),
+    RELEASED: bilibi_ui::RecordField::new("released", "Released", bilibi_ui::RecordFieldType::Date),
+    EVIDENCE: bilibi_ui::RecordField::new("evidence", "Evidence", bilibi_ui::RecordFieldType::Array).excluded("Pinned evidence is a nested collection."),
+    TARGET: bilibi_ui::RecordField::new("target", "Target", bilibi_ui::RecordFieldType::Object).excluded("Pinned targets are a nested collection."),
+    RESPONSE: bilibi_ui::RecordField::new("response", "Response", bilibi_ui::RecordFieldType::Object).excluded("Responses are a nested collection."),
 } }
 
 const TABLES: [(&str, &[(&str, &str)]); 7] = [
