@@ -119,7 +119,16 @@ pub async fn run(url: &str) -> Result<()> {
     )?;
     for actor in [STAFF, VIEWER] {
         for key in [MANAGE, VIEW, APPROVE] {
-            grants.set_direct(&admin, actor, key, Some(true)).await?;
+            grants
+                .set_direct(
+                    &admin,
+                    actor,
+                    key,
+                    Some(bilibi_authz::grants::Direct::Allow(
+                        bilibi_authz::Reach::All,
+                    )),
+                )
+                .await?;
         }
     }
     let setup = must(payroll.setup(&manager, COMPANY).await)?;
@@ -580,7 +589,12 @@ pub async fn run(url: &str) -> Result<()> {
         ("rejected document refused","INSERT INTO people_payroll_documents (tenant_id,company_id,created_by_actor_id,run_id,artifact_id,kind) SELECT tenant_id,company_id,created_by_actor_id,run_id,gen_random_uuid(),'report' FROM people_payroll_decisions WHERE id=$1",rejected.id),
     ] {sql_denied(&c,label,sql,id).await?;}
     grants
-        .set_direct(&admin, STAFF, MANAGE, Some(false))
+        .set_direct(
+            &admin,
+            STAFF,
+            MANAGE,
+            Some(bilibi_authz::grants::Direct::Deny),
+        )
         .await?;
     denied(
         "revocation refuses replay",

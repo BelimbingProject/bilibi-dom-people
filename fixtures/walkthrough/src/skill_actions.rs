@@ -87,7 +87,14 @@ pub(crate) async fn run(services: &Services, client: &Client, c: Context<'_>) ->
         ASSESSMENTS_SUBMIT,
     ] {
         grants
-            .set_direct(c.admin, super::MANAGER, capability, Some(true))
+            .set_direct(
+                c.admin,
+                super::MANAGER,
+                capability,
+                Some(bilibi_authz::grants::Direct::Allow(
+                    bilibi_authz::Reach::All,
+                )),
+            )
             .await?;
     }
     for capability in [
@@ -99,20 +106,44 @@ pub(crate) async fn run(services: &Services, client: &Client, c: Context<'_>) ->
         ASSESSMENTS_SUBMIT,
     ] {
         grants
-            .set_direct(c.admin, super::STAFF, capability, Some(true))
+            .set_direct(
+                c.admin,
+                super::STAFF,
+                capability,
+                Some(bilibi_authz::grants::Direct::Allow(
+                    bilibi_authz::Reach::All,
+                )),
+            )
             .await?;
     }
     // Remove PK2's company-wide assessment reach for the performer and the
     // viewer. Execute deliberately bypasses the supervisor reach check.
     grants
-        .set_direct(c.admin, super::STAFF, ASSESSMENTS_MANAGE, Some(false))
+        .set_direct(
+            c.admin,
+            super::STAFF,
+            ASSESSMENTS_MANAGE,
+            Some(bilibi_authz::grants::Direct::Deny),
+        )
         .await?;
     grants
-        .set_direct(c.admin, super::MANAGER, ASSESSMENTS_MANAGE, Some(false))
+        .set_direct(
+            c.admin,
+            super::MANAGER,
+            ASSESSMENTS_MANAGE,
+            Some(bilibi_authz::grants::Direct::Deny),
+        )
         .await?;
     for capability in [REASSESSMENTS_EXECUTE, ASSESSMENTS_SUBMIT, ACTIONS_VIEW] {
         grants
-            .set_direct(c.admin, super::VIEWER, capability, Some(true))
+            .set_direct(
+                c.admin,
+                super::VIEWER,
+                capability,
+                Some(bilibi_authz::grants::Direct::Allow(
+                    bilibi_authz::Reach::All,
+                )),
+            )
             .await?;
     }
     let employment = workforce
@@ -518,7 +549,12 @@ pub(crate) async fn run(services: &Services, client: &Client, c: Context<'_>) ->
         |e| matches!(e, SkillsError::SelfAssessment),
     )?;
     grants
-        .set_direct(c.admin, super::VIEWER, ASSESSMENTS_SUBMIT, Some(false))
+        .set_direct(
+            c.admin,
+            super::VIEWER,
+            ASSESSMENTS_SUBMIT,
+            Some(bilibi_authz::grants::Direct::Deny),
+        )
         .await?;
     refuses(
         "perform requires submit too",
@@ -528,7 +564,14 @@ pub(crate) async fn run(services: &Services, client: &Client, c: Context<'_>) ->
         |e| matches!(e, SkillsError::Unauthorized),
     )?;
     grants
-        .set_direct(c.admin, super::VIEWER, ASSESSMENTS_SUBMIT, Some(true))
+        .set_direct(
+            c.admin,
+            super::VIEWER,
+            ASSESSMENTS_SUBMIT,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
     let performed = saved(
         skills
@@ -667,7 +710,12 @@ pub(crate) async fn run(services: &Services, client: &Client, c: Context<'_>) ->
         scheduled.status == "scheduled" && scheduled.manual_reason.is_some(),
     )?;
     grants
-        .set_direct(c.admin, super::MANAGER, ACTIONS_MANAGE, Some(false))
+        .set_direct(
+            c.admin,
+            super::MANAGER,
+            ACTIONS_MANAGE,
+            Some(bilibi_authz::grants::Direct::Deny),
+        )
         .await?;
     refuses(
         "supervisor may view but cannot progress action they do not own",
@@ -703,7 +751,14 @@ pub(crate) async fn run(services: &Services, client: &Client, c: Context<'_>) ->
         |e| matches!(e, SkillsError::NotFound),
     )?;
     grants
-        .set_direct(c.admin, super::MANAGER, ACTIONS_MANAGE, Some(true))
+        .set_direct(
+            c.admin,
+            super::MANAGER,
+            ACTIONS_MANAGE,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
     saved(
         skills
@@ -787,7 +842,12 @@ pub(crate) async fn run(services: &Services, client: &Client, c: Context<'_>) ->
 
     // Same scope, revoked grant: no mutation and no comment event.
     grants
-        .set_direct(c.admin, super::STAFF, ACTIONS_UPDATE, Some(false))
+        .set_direct(
+            c.admin,
+            super::STAFF,
+            ACTIONS_UPDATE,
+            Some(bilibi_authz::grants::Direct::Deny),
+        )
         .await?;
     refuses(
         "revoked action grant",
@@ -797,7 +857,14 @@ pub(crate) async fn run(services: &Services, client: &Client, c: Context<'_>) ->
         |e| matches!(e, SkillsError::Unauthorized),
     )?;
     grants
-        .set_direct(c.admin, super::STAFF, ACTIONS_UPDATE, Some(true))
+        .set_direct(
+            c.admin,
+            super::STAFF,
+            ACTIONS_UPDATE,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
     users
         .unlink(c.admin, super::STAFF)
@@ -859,7 +926,14 @@ pub(crate) async fn run(services: &Services, client: &Client, c: Context<'_>) ->
     // Keep separate assessment permissions used by PK2's later read proofs.
     for capability in [ASSESSMENTS_REVIEW, ASSESSMENTS_APPROVE] {
         grants
-            .set_direct(c.admin, super::STAFF, capability, Some(true))
+            .set_direct(
+                c.admin,
+                super::STAFF,
+                capability,
+                Some(bilibi_authz::grants::Direct::Allow(
+                    bilibi_authz::Reach::All,
+                )),
+            )
             .await?;
     }
     println!(

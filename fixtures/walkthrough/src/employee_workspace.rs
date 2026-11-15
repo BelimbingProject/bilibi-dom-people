@@ -39,7 +39,16 @@ async fn employee_workspace_proof(
         "admin.person.list",
         "admin.affiliation.list",
     ] {
-        grants.set_direct(admin, MANAGER, key, Some(true)).await?;
+        grants
+            .set_direct(
+                admin,
+                MANAGER,
+                key,
+                Some(bilibi_authz::grants::Direct::Allow(
+                    bilibi_authz::Reach::All,
+                )),
+            )
+            .await?;
     }
     let rows = success(workspace.employees(manager, COMPANY).await)?;
     prove(
@@ -250,7 +259,14 @@ async fn employee_workspace_proof(
             .any(|v| v.id == disposable.id),
         "own view removed",
     )?;
-    grants.set_direct(admin, MANAGER, VIEW, Some(false)).await?;
+    grants
+        .set_direct(
+            admin,
+            MANAGER,
+            VIEW,
+            Some(bilibi_authz::grants::Direct::Deny),
+        )
+        .await?;
     prove(
         matches!(
             workspace
@@ -267,7 +283,16 @@ async fn employee_workspace_proof(
         ),
         "grant revoked with old scope refuses next write",
     )?;
-    grants.set_direct(admin, MANAGER, VIEW, Some(true)).await?;
+    grants
+        .set_direct(
+            admin,
+            MANAGER,
+            VIEW,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
+        .await?;
     // A fixture-only lifecycle change on the disposable database proves the
     // same facade refuses a company archived after the actor was proved.
     client
@@ -328,7 +353,16 @@ async fn employee_workspace_proof(
     println!("PE1 change-request audit rows: {audit_count}");
     // Leave a reader-only account for the running app after proving the
     // ungranted reader refusal above; personal views still need only VIEW.
-    grants.set_direct(admin, VIEWER, VIEW, Some(true)).await?;
+    grants
+        .set_direct(
+            admin,
+            VIEWER,
+            VIEW,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
+        .await?;
     // The fixture viewer has no affiliation (hence no own-company axis).
     // Give explicit company reach while keeping every People write denied.
     grants
@@ -336,7 +370,9 @@ async fn employee_workspace_proof(
             admin,
             VIEWER,
             "admin.company.tenant-wide.manage",
-            Some(true),
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
         )
         .await?;
     prove(

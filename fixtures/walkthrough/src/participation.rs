@@ -56,7 +56,16 @@ pub(crate) async fn run(
         EVIDENCE_MANAGE,
         RETENTION_MANAGE,
     ] {
-        grants.set_direct(admin, MANAGER, key, Some(true)).await?;
+        grants
+            .set_direct(
+                admin,
+                MANAGER,
+                key,
+                Some(bilibi_authz::grants::Direct::Allow(
+                    bilibi_authz::Reach::All,
+                )),
+            )
+            .await?;
     }
     let course = required(
         training
@@ -192,14 +201,26 @@ pub(crate) async fn run(
         required(training.participation_employees(manager, COMPANY).await)?
     );
     grants
-        .set_direct(admin, MANAGER, RECORDS_MANAGE, Some(false))
+        .set_direct(
+            admin,
+            MANAGER,
+            RECORDS_MANAGE,
+            Some(bilibi_authz::grants::Direct::Deny),
+        )
         .await?;
     refused(
         "record after grant revoked, same scope",
         training.record(manager, COMPANY, &first).await,
     )?;
     grants
-        .set_direct(admin, MANAGER, RECORDS_MANAGE, Some(true))
+        .set_direct(
+            admin,
+            MANAGER,
+            RECORDS_MANAGE,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
 
     // Two calls on separate pool connections contend for one remaining place.
@@ -297,7 +318,14 @@ pub(crate) async fn run(
         publication,
     )?;
     grants
-        .set_direct(admin, MANAGER, EVIDENCE_MANAGE, Some(true))
+        .set_direct(
+            admin,
+            MANAGER,
+            EVIDENCE_MANAGE,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
     let reserved: i64 = client.query_one("SELECT count(*) FROM base_artifacts WHERE owner_id='people/training' AND ready_at IS NULL AND purged_at IS NULL", &[]).await?.get(0);
     if reserved != 1 || !required(training.evidence(manager, COMPANY, fact.id).await)?.is_empty() {
@@ -358,14 +386,26 @@ pub(crate) async fn run(
             .await,
     )?;
     grants
-        .set_direct(admin, MANAGER, EVIDENCE_MANAGE, Some(false))
+        .set_direct(
+            admin,
+            MANAGER,
+            EVIDENCE_MANAGE,
+            Some(bilibi_authz::grants::Direct::Deny),
+        )
         .await?;
     refused(
         "attach after grant revoked, same scope",
         training.attach(manager, COMPANY, fact.id, bytes).await,
     )?;
     grants
-        .set_direct(admin, MANAGER, EVIDENCE_MANAGE, Some(true))
+        .set_direct(
+            admin,
+            MANAGER,
+            EVIDENCE_MANAGE,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
     for sql in [
         format!(

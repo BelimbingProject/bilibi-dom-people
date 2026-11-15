@@ -41,7 +41,16 @@ pub(super) async fn run(
         "admin.affiliation.view",
         "admin.audit.log.list",
     ] {
-        grants.set_direct(admin, MANAGER, key, Some(true)).await?;
+        grants
+            .set_direct(
+                admin,
+                MANAGER,
+                key,
+                Some(bilibi_authz::grants::Direct::Allow(
+                    bilibi_authz::Reach::All,
+                )),
+            )
+            .await?;
     }
     // Two first edits to an absent profile must not both claim version zero.
     let mut absent = None;
@@ -399,7 +408,12 @@ pub(super) async fn run(
     let access = saved(workspace.access_record(manager, COMPANY, employee).await)?;
     let commit = json!({"type":"save_field","id":employee.to_string(),"field":"reason","value":"forbidden","version":access.version.to_string()});
     grants
-        .set_direct(admin, MANAGER, MANAGE, Some(false))
+        .set_direct(
+            admin,
+            MANAGER,
+            MANAGE,
+            Some(bilibi_authz::grants::Direct::Deny),
+        )
         .await?;
     let body = state
         .update(LiveRequest {
@@ -418,9 +432,23 @@ pub(super) async fn run(
         "a forbidden live commit makes no write",
     )?;
     grants
-        .set_direct(admin, MANAGER, MANAGE, Some(true))
+        .set_direct(
+            admin,
+            MANAGER,
+            MANAGE,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
-    grants.set_direct(admin, MANAGER, VIEW, Some(false)).await?;
+    grants
+        .set_direct(
+            admin,
+            MANAGER,
+            VIEW,
+            Some(bilibi_authz::grants::Direct::Deny),
+        )
+        .await?;
     let body = state
         .update(LiveRequest {
             scope: manager,
@@ -434,7 +462,16 @@ pub(super) async fn run(
             && state.panels().is_empty(),
         "revoking view clears facts and history from the mounted state",
     )?;
-    grants.set_direct(admin, MANAGER, VIEW, Some(true)).await?;
+    grants
+        .set_direct(
+            admin,
+            MANAGER,
+            VIEW,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
+        .await?;
     let audit: i64 = client.query_one("SELECT count(*) FROM base_audit_mutations WHERE tenant_id=$1 AND auditable_type IN ('people_employee_workspace_profile','people_employee_access','people_employee_change_request')", &[&manager.tenant()]).await?.get(0);
     prove(
         audit >= 6,

@@ -104,7 +104,11 @@ async fn main() -> Result<()> {
                 &admin,
                 1,
                 ASSESSMENTS_REVIEW,
-                Some(mode == "restore-review"),
+                Some(if mode == "restore-review" {
+                    bilibi_authz::grants::Direct::Allow(bilibi_authz::Reach::All)
+                } else {
+                    bilibi_authz::grants::Direct::Deny
+                }),
             )
             .await?;
         return Ok(());
@@ -126,17 +130,51 @@ async fn main() -> Result<()> {
         return Ok(());
     }
     for cap in CAPABILITIES {
-        grants.set_direct(&admin, 1, cap, Some(true)).await?;
+        grants
+            .set_direct(
+                &admin,
+                1,
+                cap,
+                Some(bilibi_authz::grants::Direct::Allow(
+                    bilibi_authz::Reach::All,
+                )),
+            )
+            .await?;
     }
     for cap in CAPABILITIES {
         grants
-            .set_direct(&admin, 2, cap, Some(cap == ASSESSMENTS_VIEW))
+            .set_direct(
+                &admin,
+                2,
+                cap,
+                Some(if cap == ASSESSMENTS_VIEW {
+                    bilibi_authz::grants::Direct::Allow(bilibi_authz::Reach::All)
+                } else {
+                    bilibi_authz::grants::Direct::Deny
+                }),
+            )
             .await?;
     }
     grants
-        .set_direct(&admin, 2, bilibi_company::TENANT_WIDE, Some(true))
+        .set_direct(
+            &admin,
+            2,
+            bilibi_company::TENANT_WIDE,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
-    grants.set_direct(&admin, 3, SELF_VIEW, Some(true)).await?;
+    grants
+        .set_direct(
+            &admin,
+            3,
+            SELF_VIEW,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
+        .await?;
     let staff = auth.authenticate(&**client, 1, 3, "pk5".into()).await?;
     let skill = must(skills.list_skills(&admin, 1).await)?
         .into_iter()
@@ -244,7 +282,12 @@ async fn main() -> Result<()> {
     )
     .await?;
     grants
-        .set_direct(&admin, 1, ASSESSMENTS_REVIEW, Some(false))
+        .set_direct(
+            &admin,
+            1,
+            ASSESSMENTS_REVIEW,
+            Some(bilibi_authz::grants::Direct::Deny),
+        )
         .await?;
     let html = event(&mut page, &manager, json!({"type":"confirm"})).await?;
     check(
@@ -252,7 +295,14 @@ async fn main() -> Result<()> {
         "revoked permission refuses an already-open confirmation",
     )?;
     grants
-        .set_direct(&admin, 1, ASSESSMENTS_REVIEW, Some(true))
+        .set_direct(
+            &admin,
+            1,
+            ASSESSMENTS_REVIEW,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
     event(
         &mut page,

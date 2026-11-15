@@ -107,10 +107,28 @@ pub(super) async fn run(url: &str) -> Result<()> {
         bilibi_people_claims::MANAGE,
         bilibi_people_attendance::ALLOWANCES_MANAGE,
     ] {
-        grants.set_direct(&admin, 1, key, Some(true)).await?;
+        grants
+            .set_direct(
+                &admin,
+                1,
+                key,
+                Some(bilibi_authz::grants::Direct::Allow(
+                    bilibi_authz::Reach::All,
+                )),
+            )
+            .await?;
     }
     for key in [VIEW, bilibi_company::TENANT_WIDE] {
-        grants.set_direct(&admin, 2, key, Some(true)).await?;
+        grants
+            .set_direct(
+                &admin,
+                2,
+                key,
+                Some(bilibi_authz::grants::Direct::Allow(
+                    bilibi_authz::Reach::All,
+                )),
+            )
+            .await?;
     }
     let payroll = services.get::<Payroll>(bilibi_people_payroll::SERVICE)?;
     let workforce = services.get::<Workforce>(bilibi_people_workforce::SERVICE)?;
@@ -376,7 +394,9 @@ pub(super) async fn run(url: &str) -> Result<()> {
                 == 4,
     )?;
     send(&mut *page, &manager, json!({"type":"prepare_lock"})).await?;
-    grants.set_direct(&admin, 1, MANAGE, Some(false)).await?;
+    grants
+        .set_direct(&admin, 1, MANAGE, Some(bilibi_authz::grants::Direct::Deny))
+        .await?;
     let html = send(&mut *page, &manager, json!({"type":"confirm_action"})).await?;
     prove(
         "revoked grant refuses pending lock",
@@ -388,7 +408,16 @@ pub(super) async fn run(url: &str) -> Result<()> {
                 .locked_at
                 .is_none(),
     )?;
-    grants.set_direct(&admin, 1, MANAGE, Some(true)).await?;
+    grants
+        .set_direct(
+            &admin,
+            1,
+            MANAGE,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
+        .await?;
     send(&mut *page, &manager, json!({"type":"prepare_lock"})).await?;
     send(
         &mut *page,

@@ -84,14 +84,33 @@ pub async fn run(url: &str) -> Result<()> {
         .authenticate(&**client, TENANT, STAFF, "walkthrough".into())
         .await?;
     grants
-        .set_direct(&admin, MANAGER, REMINDERS_SEND, Some(true))
+        .set_direct(
+            &admin,
+            MANAGER,
+            REMINDERS_SEND,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
     grants
-        .set_direct(&admin, MANAGER, ASSESSMENTS_MANAGE, Some(true))
+        .set_direct(
+            &admin,
+            MANAGER,
+            ASSESSMENTS_MANAGE,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
     // This sender must not need the employment-page permission.
     grants
-        .set_direct(&admin, MANAGER, EMPLOYMENT_VIEW, Some(false))
+        .set_direct(
+            &admin,
+            MANAGER,
+            EMPLOYMENT_VIEW,
+            Some(bilibi_authz::grants::Direct::Deny),
+        )
         .await?;
     must(
         skills
@@ -437,7 +456,12 @@ pub async fn run(url: &str) -> Result<()> {
             .await,
     )?;
     grants
-        .set_direct(&admin, MANAGER, ASSESSMENTS_MANAGE, Some(false))
+        .set_direct(
+            &admin,
+            MANAGER,
+            ASSESSMENTS_MANAGE,
+            Some(bilibi_authz::grants::Direct::Deny),
+        )
         .await?;
     let gaps = must(
         skills
@@ -492,7 +516,12 @@ pub async fn run(url: &str) -> Result<()> {
 
     let job = must(skills.enqueue_reminders(&manager, COMPANY).await)?;
     grants
-        .set_direct(&admin, MANAGER, REMINDERS_SEND, Some(false))
+        .set_direct(
+            &admin,
+            MANAGER,
+            REMINDERS_SEND,
+            Some(bilibi_authz::grants::Direct::Deny),
+        )
         .await?;
     check(
         "grant revoked before direct retry refuses next write",
@@ -531,7 +560,14 @@ pub async fn run(url: &str) -> Result<()> {
         cancelled,
     )?;
     grants
-        .set_direct(&admin, MANAGER, REMINDERS_SEND, Some(true))
+        .set_direct(
+            &admin,
+            MANAGER,
+            REMINDERS_SEND,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
     let job = must(skills.enqueue_reminders(&manager, COMPANY).await)?;
     let executor = Executor::from_services(

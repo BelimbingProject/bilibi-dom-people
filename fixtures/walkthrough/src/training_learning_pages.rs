@@ -20,7 +20,14 @@ pub async fn run(
     let grants = services.get::<Grants>("base/authz.grants")?;
     for user in [MANAGER, STAFF, VIEWER] {
         grants
-            .set_direct(admin, user, LEARNING_VIEW, Some(true))
+            .set_direct(
+                admin,
+                user,
+                LEARNING_VIEW,
+                Some(bilibi_authz::grants::Direct::Allow(
+                    bilibi_authz::Reach::All,
+                )),
+            )
             .await?;
     }
     for cap in [
@@ -29,7 +36,16 @@ pub async fn run(
         PLANS_VIEW,
         BUDGETS_VIEW,
     ] {
-        grants.set_direct(admin, VIEWER, cap, Some(true)).await?;
+        grants
+            .set_direct(
+                admin,
+                VIEWER,
+                cap,
+                Some(bilibi_authz::grants::Direct::Allow(
+                    bilibi_authz::Reach::All,
+                )),
+            )
+            .await?;
     }
     let db = services.get::<bilibi_database::Db>("base/database.pool")?;
     let client = db.get().await?;
@@ -104,7 +120,11 @@ pub async fn control(url: &str, action: &str) -> Result<()> {
                     &admin,
                     STAFF,
                     bilibi_people_training::REQUESTS_SUBMIT,
-                    Some(action == "allow-submit"),
+                    Some(if action == "allow-submit" {
+                        bilibi_authz::grants::Direct::Allow(bilibi_authz::Reach::All)
+                    } else {
+                        bilibi_authz::grants::Direct::Deny
+                    }),
                 )
                 .await?;
         }
@@ -114,7 +134,11 @@ pub async fn control(url: &str, action: &str) -> Result<()> {
                     &admin,
                     MANAGER,
                     bilibi_people_training::BUDGETS_MANAGE,
-                    Some(action == "allow-budget-manage"),
+                    Some(if action == "allow-budget-manage" {
+                        bilibi_authz::grants::Direct::Allow(bilibi_authz::Reach::All)
+                    } else {
+                        bilibi_authz::grants::Direct::Deny
+                    }),
                 )
                 .await?;
         }

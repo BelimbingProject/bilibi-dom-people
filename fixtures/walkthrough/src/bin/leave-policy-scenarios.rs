@@ -47,7 +47,16 @@ async fn main() -> Result<()> {
     match std::env::args().nth(1).as_deref() {
         Some(action @ ("deny" | "allow")) => {
             grants
-                .set_direct(&admin, 1, POLICIES_MANAGE, Some(action == "allow"))
+                .set_direct(
+                    &admin,
+                    1,
+                    POLICIES_MANAGE,
+                    Some(if action == "allow" {
+                        bilibi_authz::grants::Direct::Allow(bilibi_authz::Reach::All)
+                    } else {
+                        bilibi_authz::grants::Direct::Deny
+                    }),
+                )
                 .await?;
             println!("PL4: manager policy access {action}; use its already-open browser page.");
         }

@@ -95,7 +95,16 @@ pub(crate) async fn run(
 
     // Bilimbi grants no Training key to a system role: an administrator does.
     for key in CAPABILITIES {
-        grants.set_direct(admin, MANAGER, key, Some(true)).await?;
+        grants
+            .set_direct(
+                admin,
+                MANAGER,
+                key,
+                Some(bilibi_authz::grants::Direct::Allow(
+                    bilibi_authz::Reach::All,
+                )),
+            )
+            .await?;
     }
     println!("admin grants manager@example.test {CAPABILITIES:?}");
     println!(
@@ -704,13 +713,25 @@ pub(crate) async fn run(
 
     // The same sealed scope loses authority as soon as its grant is revoked.
     grants
-        .set_direct(admin, MANAGER, COURSES_MANAGE, Some(false))
+        .set_direct(
+            admin,
+            MANAGER,
+            COURSES_MANAGE,
+            Some(bilibi_authz::grants::Direct::Deny),
+        )
         .await?;
     let revoked = training
         .set_course_active(manager, COMPANY, safety.id, false)
         .await;
     grants
-        .set_direct(admin, MANAGER, COURSES_MANAGE, Some(true))
+        .set_direct(
+            admin,
+            MANAGER,
+            COURSES_MANAGE,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
     if !matches!(revoked, Err(TrainingError::Unauthorized)) {
         return Err(Error::Internal);

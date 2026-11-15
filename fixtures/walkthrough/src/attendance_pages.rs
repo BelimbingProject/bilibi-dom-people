@@ -35,10 +35,26 @@ pub(super) async fn run(url: &str) -> Result<()> {
         .authenticate(&**c, TENANT, ADMIN, "walkthrough".into())
         .await?;
     for key in [ROSTER_MANAGE, ADJUSTMENTS_APPROVE, RULES_MANAGE, SELF_VIEW] {
-        grants.set_direct(&admin, MANAGER, key, Some(true)).await?;
+        grants
+            .set_direct(
+                &admin,
+                MANAGER,
+                key,
+                Some(bilibi_authz::grants::Direct::Allow(
+                    bilibi_authz::Reach::All,
+                )),
+            )
+            .await?;
     }
     grants
-        .set_direct(&admin, STAFF, SELF_VIEW, Some(true))
+        .set_direct(
+            &admin,
+            STAFF,
+            SELF_VIEW,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
     let workforce = services.get::<Workforce>(SERVICE)?;
     let manager_employee = workforce

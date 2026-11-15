@@ -52,7 +52,16 @@ async fn main() -> Result<()> {
         .await?;
     services
         .get::<Grants>("base/authz.grants")?
-        .set_direct(&admin, 1, MANAGE, Some(enabled))
+        .set_direct(
+            &admin,
+            1,
+            MANAGE,
+            Some(if enabled {
+                bilibi_authz::grants::Direct::Allow(bilibi_authz::Reach::All)
+            } else {
+                bilibi_authz::grants::Direct::Deny
+            }),
+        )
         .await?;
     println!(
         "Manager's Organisation manage grant: {}",

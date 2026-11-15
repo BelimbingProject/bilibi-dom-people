@@ -72,7 +72,16 @@ async fn main() -> Result<()> {
     let grants = services.get::<Grants>("base/authz.grants")?;
     for key in grants.vocabulary().capabilities.keys() {
         if key.starts_with("people.") {
-            grants.set_direct(&admin, 1, key, Some(true)).await?;
+            grants
+                .set_direct(
+                    &admin,
+                    1,
+                    key,
+                    Some(bilibi_authz::grants::Direct::Allow(
+                        bilibi_authz::Reach::All,
+                    )),
+                )
+                .await?;
         }
     }
     let profile: i64 = client
@@ -196,11 +205,23 @@ async fn main() -> Result<()> {
             && !csv.bytes.is_empty(),
     )?;
     grants
-        .set_direct(&admin, 1, bilibi_people_claims::REIMBURSE, Some(false))
+        .set_direct(
+            &admin,
+            1,
+            bilibi_people_claims::REIMBURSE,
+            Some(bilibi_authz::grants::Direct::Deny),
+        )
         .await?;
     let refused = files.0.serve(download()).await;
     grants
-        .set_direct(&admin, 1, bilibi_people_claims::REIMBURSE, Some(true))
+        .set_direct(
+            &admin,
+            1,
+            bilibi_people_claims::REIMBURSE,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
     prove(
         "CSV refuses a grant revoked after its link was rendered",

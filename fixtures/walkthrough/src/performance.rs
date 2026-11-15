@@ -101,8 +101,26 @@ pub(super) async fn run_with_pages(url: &str, pages: bool) -> Result<()> {
     let org = services.get::<Organisation>(bilibi_people_organisation::SERVICE)?;
     let skills = services.get::<Skills>(sk::SERVICE)?;
     for capability in pm::CAPABILITIES {
-        grants.set_direct(&admin, 1, capability, Some(true)).await?;
-        grants.set_direct(&admin, 3, capability, Some(true)).await?;
+        grants
+            .set_direct(
+                &admin,
+                1,
+                capability,
+                Some(bilibi_authz::grants::Direct::Allow(
+                    bilibi_authz::Reach::All,
+                )),
+            )
+            .await?;
+        grants
+            .set_direct(
+                &admin,
+                3,
+                capability,
+                Some(bilibi_authz::grants::Direct::Allow(
+                    bilibi_authz::Reach::All,
+                )),
+            )
+            .await?;
     }
     let references = services.get::<ReferenceData>(bilibi_people_reference_data::SERVICE)?;
     saved(
@@ -793,7 +811,12 @@ pub(super) async fn run_with_pages(url: &str, pages: bool) -> Result<()> {
         "impersonated decision",
     )?;
     grants
-        .set_direct(&admin, 1, KPIS_SUBMIT, Some(false))
+        .set_direct(
+            &admin,
+            1,
+            KPIS_SUBMIT,
+            Some(bilibi_authz::grants::Direct::Deny),
+        )
         .await?;
     refused(
         performance.define_kpi(&manager, 1, &definition_input).await,
@@ -801,7 +824,14 @@ pub(super) async fn run_with_pages(url: &str, pages: bool) -> Result<()> {
         "revoked grant using existing scope",
     )?;
     grants
-        .set_direct(&admin, 1, KPIS_SUBMIT, Some(true))
+        .set_direct(
+            &admin,
+            1,
+            KPIS_SUBMIT,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
     saved(users.unlink(&admin, 3).await)?;
     refused(

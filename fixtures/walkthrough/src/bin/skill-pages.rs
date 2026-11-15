@@ -101,7 +101,7 @@ async fn main() -> Result<()> {
                 } else {
                     ACTIONS_MANAGE
                 },
-                Some(false),
+                Some(bilibi_authz::grants::Direct::Deny),
             )
             .await?;
         return Ok(());
@@ -118,13 +118,33 @@ async fn main() -> Result<()> {
         REASSESSMENTS_EXECUTE,
         ASSESSMENTS_SUBMIT,
     ] {
-        grants.set_direct(&admin, 1, cap, Some(true)).await?;
+        grants
+            .set_direct(
+                &admin,
+                1,
+                cap,
+                Some(bilibi_authz::grants::Direct::Allow(
+                    bilibi_authz::Reach::All,
+                )),
+            )
+            .await?;
     }
     for cap in [ACTIONS_VIEW, ACTIONS_UPDATE] {
-        grants.set_direct(&admin, 3, cap, Some(true)).await?;
+        grants
+            .set_direct(
+                &admin,
+                3,
+                cap,
+                Some(bilibi_authz::grants::Direct::Allow(
+                    bilibi_authz::Reach::All,
+                )),
+            )
+            .await?;
     }
     for cap in [ACTIONS_MANAGE, ACTIONS_APPROVE, POLICY_MANAGE] {
-        grants.set_direct(&admin, 3, cap, Some(false)).await?;
+        grants
+            .set_direct(&admin, 3, cap, Some(bilibi_authz::grants::Direct::Deny))
+            .await?;
     }
     if mode == "restore" {
         return Ok(());
@@ -300,7 +320,12 @@ async fn main() -> Result<()> {
     )?;
     let before = saved(skills.policy(&admin, 1).await)?;
     grants
-        .set_direct(&admin, 1, POLICY_MANAGE, Some(false))
+        .set_direct(
+            &admin,
+            1,
+            POLICY_MANAGE,
+            Some(bilibi_authz::grants::Direct::Deny),
+        )
         .await?;
     let html = event(
         &mut page,
@@ -317,7 +342,14 @@ async fn main() -> Result<()> {
         "revoked event wrote nothing",
     )?;
     grants
-        .set_direct(&admin, 1, POLICY_MANAGE, Some(true))
+        .set_direct(
+            &admin,
+            1,
+            POLICY_MANAGE,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
     check(
         matches!(

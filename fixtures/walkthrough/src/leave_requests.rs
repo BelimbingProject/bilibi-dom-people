@@ -71,7 +71,14 @@ pub(crate) async fn run(
     let grants = services.get::<Grants>("base/authz.grants")?;
     for key in [SELF_VIEW, REQUESTS_APPROVE, POLICIES_MANAGE] {
         grants
-            .set_direct(admin, manager.user(), key, Some(true))
+            .set_direct(
+                admin,
+                manager.user(),
+                key,
+                Some(bilibi_authz::grants::Direct::Allow(
+                    bilibi_authz::Reach::All,
+                )),
+            )
             .await?;
     }
     let today = leave.today(manager, company).await.map_err(leave_error)?;
@@ -738,7 +745,12 @@ pub(crate) async fn run(
         "Queue captures the operator and five-attempt budget",
     )?;
     grants
-        .set_direct(admin, manager.user(), SELF_VIEW, Some(false))
+        .set_direct(
+            admin,
+            manager.user(),
+            SELF_VIEW,
+            Some(bilibi_authz::grants::Direct::Deny),
+        )
         .await?;
     require(
         matches!(
@@ -754,7 +766,14 @@ pub(crate) async fn run(
         "revoked self-service grant refuses the next write",
     )?;
     grants
-        .set_direct(admin, manager.user(), SELF_VIEW, Some(true))
+        .set_direct(
+            admin,
+            manager.user(),
+            SELF_VIEW,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
     let authentication =
         services.get::<bilibi_tenancy::Authentication>("base/tenancy.authentication")?;
@@ -762,14 +781,26 @@ pub(crate) async fn run(
         .authenticate(&**client, manager.tenant(), crate::STAFF, String::new())
         .await?;
     grants
-        .set_direct(admin, crate::STAFF, POLICIES_MANAGE, Some(true))
+        .set_direct(
+            admin,
+            crate::STAFF,
+            POLICIES_MANAGE,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
     let denied = leave
         .enqueue_carry_forward(&staff, company, current_year - 1)
         .await
         .map_err(leave_error)?;
     grants
-        .set_direct(admin, crate::STAFF, POLICIES_MANAGE, Some(false))
+        .set_direct(
+            admin,
+            crate::STAFF,
+            POLICIES_MANAGE,
+            Some(bilibi_authz::grants::Direct::Deny),
+        )
         .await?;
     let not_ended = leave
         .enqueue_carry_forward(admin, company, current_year)
@@ -794,7 +825,14 @@ pub(crate) async fn after_unlink(
 ) -> Result<()> {
     let grants = services.get::<Grants>("base/authz.grants")?;
     grants
-        .set_direct(admin, stale.user(), SELF_VIEW, Some(true))
+        .set_direct(
+            admin,
+            stale.user(),
+            SELF_VIEW,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
     let leave = services.get::<Leave>(bilibi_people_leave::SERVICE)?;
     let today = leave.today(admin, company).await.map_err(leave_error)?;

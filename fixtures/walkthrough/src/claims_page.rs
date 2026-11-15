@@ -47,7 +47,16 @@ pub(crate) async fn run(url: &str, action: &str) -> Result<()> {
     match action {
         "revoke" | "restore" => {
             grants
-                .set_direct(&admin, 3, SUBMIT, Some(action == "restore"))
+                .set_direct(
+                    &admin,
+                    3,
+                    SUBMIT,
+                    Some(if action == "restore" {
+                        bilibi_authz::grants::Direct::Allow(bilibi_authz::Reach::All)
+                    } else {
+                        bilibi_authz::grants::Direct::Deny
+                    }),
+                )
                 .await?;
         }
         "unlink" => {

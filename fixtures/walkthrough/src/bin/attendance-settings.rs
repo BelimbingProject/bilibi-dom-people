@@ -36,20 +36,46 @@ async fn main() -> Result<()> {
     match mode.as_str() {
         "seed" | "restore" => {
             for capability in [RULES_MANAGE, ALLOWANCES_MANAGE] {
-                grants.set_direct(&admin, 1, capability, Some(true)).await?;
+                grants
+                    .set_direct(
+                        &admin,
+                        1,
+                        capability,
+                        Some(bilibi_authz::grants::Direct::Allow(
+                            bilibi_authz::Reach::All,
+                        )),
+                    )
+                    .await?;
             }
             // The contractor is linked to Company 002 and proves the tab is withheld independently.
             grants
-                .set_direct(&admin, 7, RULES_MANAGE, Some(true))
+                .set_direct(
+                    &admin,
+                    7,
+                    RULES_MANAGE,
+                    Some(bilibi_authz::grants::Direct::Allow(
+                        bilibi_authz::Reach::All,
+                    )),
+                )
                 .await?;
             grants
-                .set_direct(&admin, 7, ALLOWANCES_MANAGE, Some(false))
+                .set_direct(
+                    &admin,
+                    7,
+                    ALLOWANCES_MANAGE,
+                    Some(bilibi_authz::grants::Direct::Deny),
+                )
                 .await?;
         }
         "revoke" => {
             for capability in [RULES_MANAGE, ALLOWANCES_MANAGE] {
                 grants
-                    .set_direct(&admin, 1, capability, Some(false))
+                    .set_direct(
+                        &admin,
+                        1,
+                        capability,
+                        Some(bilibi_authz::grants::Direct::Deny),
+                    )
                     .await?;
             }
         }

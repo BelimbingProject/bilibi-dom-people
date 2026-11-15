@@ -86,7 +86,16 @@ async fn skills_catalog(
     let grants = services.get::<Grants>("base/authz.grants")?;
     println!("--- Skills catalog ---");
     for key in [CATALOG_VIEW, CATALOG_MANAGE] {
-        grants.set_direct(admin, MANAGER, key, Some(true)).await?;
+        grants
+            .set_direct(
+                admin,
+                MANAGER,
+                key,
+                Some(bilibi_authz::grants::Direct::Allow(
+                    bilibi_authz::Reach::All,
+                )),
+            )
+            .await?;
     }
     println!("admin grants manager@example.test {CATALOG_VIEW} and {CATALOG_MANAGE} directly; the publish and policy keys stay with the admin");
 

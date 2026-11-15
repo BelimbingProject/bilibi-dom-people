@@ -145,10 +145,28 @@ async fn main() -> Result<()> {
         "people.employees.manage",
         "people.employees.review",
     ] {
-        grants.set_direct(&admin, 1, key, Some(true)).await?;
+        grants
+            .set_direct(
+                &admin,
+                1,
+                key,
+                Some(bilibi_authz::grants::Direct::Allow(
+                    bilibi_authz::Reach::All,
+                )),
+            )
+            .await?;
     }
     for (_, _, key, _) in cases {
-        grants.set_direct(&admin, 1, key, Some(true)).await?;
+        grants
+            .set_direct(
+                &admin,
+                1,
+                key,
+                Some(bilibi_authz::grants::Direct::Allow(
+                    bilibi_authz::Reach::All,
+                )),
+            )
+            .await?;
     }
     if std::env::args().nth(1).as_deref() == Some("queued-grant") {
         drop(client);
@@ -197,7 +215,12 @@ async fn main() -> Result<()> {
             )?;
         }
         grants
-            .set_direct(&admin, 1, capability, Some(false))
+            .set_direct(
+                &admin,
+                1,
+                capability,
+                Some(bilibi_authz::grants::Direct::Deny),
+            )
             .await?;
         let outcome = state
             .update(LiveRequest {
@@ -207,7 +230,16 @@ async fn main() -> Result<()> {
             })
             .await;
         // Restore even when a proof fails, leaving the browser records usable.
-        grants.set_direct(&admin, 1, capability, Some(true)).await?;
+        grants
+            .set_direct(
+                &admin,
+                1,
+                capability,
+                Some(bilibi_authz::grants::Direct::Allow(
+                    bilibi_authz::Reach::All,
+                )),
+            )
+            .await?;
         let body = outcome?;
         let refusal = match *operation {
             "employees" => "You cannot add an employment for this company.",
@@ -334,7 +366,13 @@ async fn revoke_queued_settings(
         .await
         .map_err(|_| Error::Internal)?;
     grants
-        .set_direct_in(&mut tx, admin, 1, SETTINGS_MANAGE, Some(false))
+        .set_direct_in(
+            &mut tx,
+            admin,
+            1,
+            SETTINGS_MANAGE,
+            Some(bilibi_authz::grants::Direct::Deny),
+        )
         .await?;
     let writer = workforce.clone();
     let scope = manager.clone();
@@ -352,7 +390,14 @@ async fn revoke_queued_settings(
     let outcome = write.await.map_err(|_| Error::Internal)?;
     // Restore before reporting a missing guard so Chrome still has its setup.
     grants
-        .set_direct(admin, 1, SETTINGS_MANAGE, Some(true))
+        .set_direct(
+            admin,
+            1,
+            SETTINGS_MANAGE,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
     workforce
         .put_working_statuses(admin, 1, &previous)
@@ -435,7 +480,16 @@ async fn queued_refusal(
     write: impl std::future::Future<Output = bool> + Send + 'static,
 ) -> Result<()> {
     let grants = services.get::<Grants>("base/authz.grants")?;
-    grants.set_direct(admin, 1, capability, Some(true)).await?;
+    grants
+        .set_direct(
+            admin,
+            1,
+            capability,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
+        .await?;
     let mutations = services.get::<bilibi_database::MutationBoundary>("base/database.mutations")?;
     let mut client = db.get().await?;
     let mut tx = mutations
@@ -448,7 +502,13 @@ async fn queued_refusal(
         .await
         .map_err(|_| Error::Internal)?;
     grants
-        .set_direct_in(&mut tx, admin, 1, capability, Some(false))
+        .set_direct_in(
+            &mut tx,
+            admin,
+            1,
+            capability,
+            Some(bilibi_authz::grants::Direct::Deny),
+        )
         .await?;
     let task = tokio::spawn(write);
     if let Err(error) = wait_for_blocked(db, 1).await {
@@ -458,7 +518,16 @@ async fn queued_refusal(
     }
     tx.commit().await?;
     let refused = task.await.map_err(|_| Error::Internal)?;
-    grants.set_direct(admin, 1, capability, Some(true)).await?;
+    grants
+        .set_direct(
+            admin,
+            1,
+            capability,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
+        .await?;
     prove(
         refused,
         &format!("queued {capability} write observes the committed revocation"),

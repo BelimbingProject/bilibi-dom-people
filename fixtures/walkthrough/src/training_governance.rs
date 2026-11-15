@@ -167,7 +167,14 @@ pub async fn run(
             BUDGETS_MANAGE,
         ] {
             grants
-                .set_direct(admin, user, capability, Some(true))
+                .set_direct(
+                    admin,
+                    user,
+                    capability,
+                    Some(bilibi_authz::grants::Direct::Allow(
+                        bilibi_authz::Reach::All,
+                    )),
+                )
                 .await?;
         }
     }
@@ -333,7 +340,14 @@ pub async fn run(
     .await
     .map_err(|_| Error::Internal)?;
     grants
-        .set_direct(admin, VIEWER, REQUESTS_REVIEW, Some(true))
+        .set_direct(
+            admin,
+            VIEWER,
+            REQUESTS_REVIEW,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
     let subject_account = authentication
         .authenticate(client, TENANT, VIEWER, "walkthrough".into())
@@ -624,7 +638,12 @@ pub async fn run(
             .await,
     )?;
     grants
-        .set_direct(admin, STAFF, REQUESTS_SUBMIT, Some(false))
+        .set_direct(
+            admin,
+            STAFF,
+            REQUESTS_SUBMIT,
+            Some(bilibi_authz::grants::Direct::Deny),
+        )
         .await?;
     refused(
         "stale scope loses revoked grant",
@@ -634,7 +653,14 @@ pub async fn run(
         TrainingError::Unauthorized,
     )?;
     grants
-        .set_direct(admin, STAFF, REQUESTS_SUBMIT, Some(true))
+        .set_direct(
+            admin,
+            STAFF,
+            REQUESTS_SUBMIT,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
     users
         .unlink(admin, STAFF)
@@ -642,7 +668,14 @@ pub async fn run(
         .map_err(|_| Error::Internal)?;
     // Keep company reach so the refusal specifically proves the current employment link.
     grants
-        .set_direct(admin, STAFF, "admin.company.tenant-wide.manage", Some(true))
+        .set_direct(
+            admin,
+            STAFF,
+            "admin.company.tenant-wide.manage",
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
     refused(
         "unlinked account cannot act for former employee",

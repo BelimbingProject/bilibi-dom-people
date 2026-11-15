@@ -72,13 +72,38 @@ pub(super) async fn run(url: &str) -> Result<()> {
         bilibi_people_claims::MANAGE,
         bilibi_people_attendance::ALLOWANCES_MANAGE,
     ] {
-        grants.set_direct(&admin, 1, key, Some(true)).await?;
+        grants
+            .set_direct(
+                &admin,
+                1,
+                key,
+                Some(bilibi_authz::grants::Direct::Allow(
+                    bilibi_authz::Reach::All,
+                )),
+            )
+            .await?;
     }
-    grants.set_direct(&admin, 2, VIEW, Some(true)).await?;
+    grants
+        .set_direct(
+            &admin,
+            2,
+            VIEW,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
+        .await?;
     // This fixture viewer is unlinked, so grant company reach separately
     // from Payroll's read capability. It still has no setup write grant.
     grants
-        .set_direct(&admin, 2, bilibi_company::TENANT_WIDE, Some(true))
+        .set_direct(
+            &admin,
+            2,
+            bilibi_company::TENANT_WIDE,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
     let payroll = services.get::<Payroll>(bilibi_people_payroll::SERVICE)?;
     let pages = services.get::<PageService<Scope, Error>>(PAGES)?;
@@ -307,7 +332,9 @@ pub(super) async fn run(url: &str) -> Result<()> {
         json!({"type":"prepare_lock","id":run.to_string()}),
     )
     .await?;
-    grants.set_direct(&admin, 1, MANAGE, Some(false)).await?;
+    grants
+        .set_direct(&admin, 1, MANAGE, Some(bilibi_authz::grants::Direct::Deny))
+        .await?;
     let html = send(&mut *page, &manager, json!({"type":"lock_run"})).await?;
     prove(
         "grant revoked before confirmation",
@@ -322,7 +349,16 @@ pub(super) async fn run(url: &str) -> Result<()> {
                 .locked_at
                 .is_none(),
     )?;
-    grants.set_direct(&admin, 1, MANAGE, Some(true)).await?;
+    grants
+        .set_direct(
+            &admin,
+            1,
+            MANAGE,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
+        .await?;
     send(
         &mut *page,
         &manager,

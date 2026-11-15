@@ -76,16 +76,46 @@ pub async fn run(url: &str, command: &str) -> Result<()> {
                 pm::SELF_VIEW,
                 sk::SELF_VIEW,
             ] {
-                grants.set_direct(&admin, 1, cap, Some(true)).await?;
+                grants
+                    .set_direct(
+                        &admin,
+                        1,
+                        cap,
+                        Some(bilibi_authz::grants::Direct::Allow(
+                            bilibi_authz::Reach::All,
+                        )),
+                    )
+                    .await?;
             }
             for cap in [pg::SELF_VIEW, pm::SELF_VIEW, sk::SELF_VIEW] {
-                grants.set_direct(&admin, 3, cap, Some(true)).await?;
+                grants
+                    .set_direct(
+                        &admin,
+                        3,
+                        cap,
+                        Some(bilibi_authz::grants::Direct::Allow(
+                            bilibi_authz::Reach::All,
+                        )),
+                    )
+                    .await?;
             }
             grants
-                .set_direct(&admin, 2, pg::POLICY_VIEW, Some(true))
+                .set_direct(
+                    &admin,
+                    2,
+                    pg::POLICY_VIEW,
+                    Some(bilibi_authz::grants::Direct::Allow(
+                        bilibi_authz::Reach::All,
+                    )),
+                )
                 .await?;
             grants
-                .set_direct(&admin, 2, pg::POLICY_MANAGE, Some(false))
+                .set_direct(
+                    &admin,
+                    2,
+                    pg::POLICY_MANAGE,
+                    Some(bilibi_authz::grants::Direct::Deny),
+                )
                 .await?;
             println!(
                 "PG2 prepared: manager can draft and publish, viewer has read-only history, staff can read both standing sections; no progression policies yet."
@@ -97,7 +127,11 @@ pub async fn run(url: &str, command: &str) -> Result<()> {
                     &admin,
                     1,
                     pg::POLICY_MANAGE,
-                    Some(command == "restore-manage"),
+                    Some(if command == "restore-manage" {
+                        bilibi_authz::grants::Direct::Allow(bilibi_authz::Reach::All)
+                    } else {
+                        bilibi_authz::grants::Direct::Deny
+                    }),
                 )
                 .await?;
             println!("PG2 manager policy management: {command}");
@@ -108,7 +142,11 @@ pub async fn run(url: &str, command: &str) -> Result<()> {
                     &admin,
                     3,
                     pg::SELF_VIEW,
-                    Some(matches!(command, "both" | "progression-only")),
+                    Some(if matches!(command, "both" | "progression-only") {
+                        bilibi_authz::grants::Direct::Allow(bilibi_authz::Reach::All)
+                    } else {
+                        bilibi_authz::grants::Direct::Deny
+                    }),
                 )
                 .await?;
             grants
@@ -116,7 +154,11 @@ pub async fn run(url: &str, command: &str) -> Result<()> {
                     &admin,
                     3,
                     pm::SELF_VIEW,
-                    Some(matches!(command, "both" | "performance-only")),
+                    Some(if matches!(command, "both" | "performance-only") {
+                        bilibi_authz::grants::Direct::Allow(bilibi_authz::Reach::All)
+                    } else {
+                        bilibi_authz::grants::Direct::Deny
+                    }),
                 )
                 .await?;
             println!("PG2 staff standing permissions: {command}");
@@ -127,14 +169,27 @@ pub async fn run(url: &str, command: &str) -> Result<()> {
                     &admin,
                     3,
                     sk::SELF_VIEW,
-                    Some(command == "restore-evidence"),
+                    Some(if command == "restore-evidence" {
+                        bilibi_authz::grants::Direct::Allow(bilibi_authz::Reach::All)
+                    } else {
+                        bilibi_authz::grants::Direct::Deny
+                    }),
                 )
                 .await?;
             println!("PG2 staff competency evidence permission: {command}");
         }
         "unlinked" => {
             for cap in [pg::SELF_VIEW, pm::SELF_VIEW] {
-                grants.set_direct(&admin, 2, cap, Some(true)).await?;
+                grants
+                    .set_direct(
+                        &admin,
+                        2,
+                        cap,
+                        Some(bilibi_authz::grants::Direct::Allow(
+                            bilibi_authz::Reach::All,
+                        )),
+                    )
+                    .await?;
             }
             println!("PG2 viewer can open standing but has no employment.");
         }

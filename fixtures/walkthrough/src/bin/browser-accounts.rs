@@ -48,18 +48,45 @@ async fn main() -> Result<()> {
     let grants = services.get::<Grants>("base/authz.grants")?;
     for key in grants.vocabulary().capabilities.keys() {
         if key.starts_with("people.") {
-            grants.set_direct(&admin, 1, key, Some(true)).await?;
+            grants
+                .set_direct(
+                    &admin,
+                    1,
+                    key,
+                    Some(bilibi_authz::grants::Direct::Allow(
+                        bilibi_authz::Reach::All,
+                    )),
+                )
+                .await?;
             let self_service = key.ends_with(".self.view")
                 || matches!(
                     *key,
                     "people.training.learning.view" | "people.training.passport.my.view"
                 );
             let read = key.ends_with(".view") && !self_service;
-            grants.set_direct(&admin, 2, key, Some(read)).await?;
+            grants
+                .set_direct(
+                    &admin,
+                    2,
+                    key,
+                    Some(if read {
+                        bilibi_authz::grants::Direct::Allow(bilibi_authz::Reach::All)
+                    } else {
+                        bilibi_authz::grants::Direct::Deny
+                    }),
+                )
+                .await?;
         }
     }
     grants
-        .set_direct(&admin, 2, bilibi_company::TENANT_WIDE, Some(true))
+        .set_direct(
+            &admin,
+            2,
+            bilibi_company::TENANT_WIDE,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
     println!(
         "manager@example.test: every People permission; viewer@example.test: non-self-service reads only"
