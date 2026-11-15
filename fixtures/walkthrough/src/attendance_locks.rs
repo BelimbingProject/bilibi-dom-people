@@ -123,7 +123,13 @@ pub(super) async fn run(
         .await
         .map_err(|_| Error::Internal)?;
     grants
-        .set_direct_in(&mut tx, admin, MANAGER, RULES_MANAGE, Some(false))
+        .set_direct_in(
+            &mut tx,
+            admin,
+            MANAGER,
+            RULES_MANAGE,
+            Some(bilibi_authz::grants::Direct::Deny),
+        )
         .await?;
     let waiter = {
         let attendance = attendance.clone();
@@ -156,7 +162,14 @@ pub(super) async fn run(
         }
     }
     grants
-        .set_direct(admin, MANAGER, RULES_MANAGE, Some(true))
+        .set_direct(
+            admin,
+            MANAGER,
+            RULES_MANAGE,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
     let absent: bool = client.query_one(
         "SELECT NOT EXISTS (SELECT 1 FROM people_attendance_clock_facts WHERE tenant_id = $1 AND company_id = $2 AND event_key = 'queued-location') AND NOT EXISTS (SELECT 1 FROM people_attendance_shift_definitions WHERE tenant_id = $1 AND company_id = $2 AND code = 'QUEUED')",

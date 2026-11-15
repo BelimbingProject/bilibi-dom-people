@@ -123,13 +123,31 @@ async fn main() -> Result<()> {
             PROFILES_PUBLISH
         };
         grants
-            .set_direct(&admin, 1, cap, Some(command.starts_with("restore")))
+            .set_direct(
+                &admin,
+                1,
+                cap,
+                Some(if command.starts_with("restore") {
+                    bilibi_authz::grants::Direct::Allow(bilibi_authz::Reach::All)
+                } else {
+                    bilibi_authz::grants::Direct::Deny
+                }),
+            )
             .await?;
         println!("PK4 {command}");
         return Ok(());
     }
     for cap in [CATALOG_VIEW, CATALOG_MANAGE, PROFILES_PUBLISH] {
-        grants.set_direct(&admin, 1, cap, Some(true)).await?;
+        grants
+            .set_direct(
+                &admin,
+                1,
+                cap,
+                Some(bilibi_authz::grants::Direct::Allow(
+                    bilibi_authz::Reach::All,
+                )),
+            )
+            .await?;
     }
     if command == "prepare" {
         let person = services
@@ -173,10 +191,19 @@ async fn main() -> Result<()> {
         .await
         .map_err(|_| Error::Internal)?;
         grants
-            .set_direct(&admin, 2, CATALOG_VIEW, Some(true))
+            .set_direct(
+                &admin,
+                2,
+                CATALOG_VIEW,
+                Some(bilibi_authz::grants::Direct::Allow(
+                    bilibi_authz::Reach::All,
+                )),
+            )
             .await?;
         for cap in [CATALOG_MANAGE, PROFILES_PUBLISH] {
-            grants.set_direct(&admin, 2, cap, Some(false)).await?;
+            grants
+                .set_direct(&admin, 2, cap, Some(bilibi_authz::grants::Direct::Deny))
+                .await?;
         }
         println!(
             "PK4 prepared: manager can manage and publish; viewer has a linked affiliation and read-only catalog access. No Skills records added."
@@ -320,7 +347,12 @@ async fn main() -> Result<()> {
     )
     .await?;
     grants
-        .set_direct(&admin, 1, PROFILES_PUBLISH, Some(false))
+        .set_direct(
+            &admin,
+            1,
+            PROFILES_PUBLISH,
+            Some(bilibi_authz::grants::Direct::Deny),
+        )
         .await?;
     let h = event(&mut page, &manager, json!({"type":"confirm"})).await?;
     check(
@@ -335,7 +367,14 @@ async fn main() -> Result<()> {
         "revocation leaves profile draft",
     )?;
     grants
-        .set_direct(&admin, 1, PROFILES_PUBLISH, Some(true))
+        .set_direct(
+            &admin,
+            1,
+            PROFILES_PUBLISH,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
     event(
         &mut page,
@@ -387,7 +426,12 @@ async fn main() -> Result<()> {
         "foreign company cannot expose profile",
     )?;
     grants
-        .set_direct(&admin, 1, CATALOG_MANAGE, Some(false))
+        .set_direct(
+            &admin,
+            1,
+            CATALOG_MANAGE,
+            Some(bilibi_authz::grants::Direct::Deny),
+        )
         .await?;
     let h=event(&mut catalog,&manager,json!({"type":"create_category","category[code]":"revoked","category[name]":"Never created"})).await?;
     check(
@@ -396,7 +440,14 @@ async fn main() -> Result<()> {
         "revoked manager sees read-only catalog and write refusal",
     )?;
     grants
-        .set_direct(&admin, 1, CATALOG_MANAGE, Some(true))
+        .set_direct(
+            &admin,
+            1,
+            CATALOG_MANAGE,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
     println!("PK4 page proof complete; the manager may now use catalog records in the browser.");
     Ok(())

@@ -249,7 +249,16 @@ pub async fn run(url: &str, action: &str) -> Result<()> {
     match action {
         "deny-my" | "allow-my" => {
             grants
-                .set_direct(&admin, STAFF, PASSPORT_MY_VIEW, Some(action == "allow-my"))
+                .set_direct(
+                    &admin,
+                    STAFF,
+                    PASSPORT_MY_VIEW,
+                    Some(if action == "allow-my" {
+                        bilibi_authz::grants::Direct::Allow(bilibi_authz::Reach::All)
+                    } else {
+                        bilibi_authz::grants::Direct::Deny
+                    }),
+                )
                 .await?;
             return Ok(());
         }
@@ -273,19 +282,54 @@ pub async fn run(url: &str, action: &str) -> Result<()> {
         PASSPORT_GENERATE,
         INSIGHTS_VIEW,
     ] {
-        grants.set_direct(&admin, MANAGER, cap, Some(true)).await?;
+        grants
+            .set_direct(
+                &admin,
+                MANAGER,
+                cap,
+                Some(bilibi_authz::grants::Direct::Allow(
+                    bilibi_authz::Reach::All,
+                )),
+            )
+            .await?;
     }
     for cap in [PASSPORT_MY_VIEW, PASSPORT_GENERATE] {
-        grants.set_direct(&admin, STAFF, cap, Some(true)).await?;
+        grants
+            .set_direct(
+                &admin,
+                STAFF,
+                cap,
+                Some(bilibi_authz::grants::Direct::Allow(
+                    bilibi_authz::Reach::All,
+                )),
+            )
+            .await?;
     }
     grants
-        .set_direct(&admin, STAFF, RECORDS_VIEW, Some(false))
+        .set_direct(
+            &admin,
+            STAFF,
+            RECORDS_VIEW,
+            Some(bilibi_authz::grants::Direct::Deny),
+        )
         .await?;
     grants
-        .set_direct(&admin, VIEWER, INSIGHTS_VIEW, Some(true))
+        .set_direct(
+            &admin,
+            VIEWER,
+            INSIGHTS_VIEW,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
     grants
-        .set_direct(&admin, VIEWER, RECORDS_VIEW, Some(false))
+        .set_direct(
+            &admin,
+            VIEWER,
+            RECORDS_VIEW,
+            Some(bilibi_authz::grants::Direct::Deny),
+        )
         .await?;
     relink().await?;
     let staff = auth
@@ -644,7 +688,12 @@ pub async fn run(url: &str, action: &str) -> Result<()> {
         TrainingError::ReportPeriodUnavailable,
     )?;
     grants
-        .set_direct(&admin, STAFF, PASSPORT_MY_VIEW, Some(false))
+        .set_direct(
+            &admin,
+            STAFF,
+            PASSPORT_MY_VIEW,
+            Some(bilibi_authz::grants::Direct::Deny),
+        )
         .await?;
     refused(
         "read after grant revoked with old scope",
@@ -654,10 +703,22 @@ pub async fn run(url: &str, action: &str) -> Result<()> {
         TrainingError::Unauthorized,
     )?;
     grants
-        .set_direct(&admin, STAFF, PASSPORT_MY_VIEW, Some(true))
+        .set_direct(
+            &admin,
+            STAFF,
+            PASSPORT_MY_VIEW,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
     grants
-        .set_direct(&admin, STAFF, PASSPORT_GENERATE, Some(false))
+        .set_direct(
+            &admin,
+            STAFF,
+            PASSPORT_GENERATE,
+            Some(bilibi_authz::grants::Direct::Deny),
+        )
         .await?;
     refused(
         "generate without generation permission",
@@ -677,7 +738,14 @@ pub async fn run(url: &str, action: &str) -> Result<()> {
             == first_bytes,
     )?;
     grants
-        .set_direct(&admin, STAFF, PASSPORT_GENERATE, Some(true))
+        .set_direct(
+            &admin,
+            STAFF,
+            PASSPORT_GENERATE,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
     users
         .unlink(&admin, STAFF)

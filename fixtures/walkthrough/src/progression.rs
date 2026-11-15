@@ -86,17 +86,60 @@ pub async fn run(url: &str) -> Result<()> {
     let people = services.get::<Workforce>(bilibi_people_workforce::SERVICE)?;
     let performance = services.get::<pm::Performance>(pm::SERVICE)?;
     for cap in pg::CAPABILITIES {
-        grants.set_direct(&admin, 1, cap, Some(true)).await?;
-        grants.set_direct(&admin, 3, cap, Some(true)).await?;
+        grants
+            .set_direct(
+                &admin,
+                1,
+                cap,
+                Some(bilibi_authz::grants::Direct::Allow(
+                    bilibi_authz::Reach::All,
+                )),
+            )
+            .await?;
+        grants
+            .set_direct(
+                &admin,
+                3,
+                cap,
+                Some(bilibi_authz::grants::Direct::Allow(
+                    bilibi_authz::Reach::All,
+                )),
+            )
+            .await?;
     }
     for cap in [sk::ASSESSMENTS_SUBMIT, sk::ASSESSMENTS_MANAGE] {
-        grants.set_direct(&admin, 1, cap, Some(true)).await?;
+        grants
+            .set_direct(
+                &admin,
+                1,
+                cap,
+                Some(bilibi_authz::grants::Direct::Allow(
+                    bilibi_authz::Reach::All,
+                )),
+            )
+            .await?;
     }
     for cap in [sk::ASSESSMENTS_REVIEW, sk::ASSESSMENTS_APPROVE] {
-        grants.set_direct(&admin, 4, cap, Some(true)).await?;
+        grants
+            .set_direct(
+                &admin,
+                4,
+                cap,
+                Some(bilibi_authz::grants::Direct::Allow(
+                    bilibi_authz::Reach::All,
+                )),
+            )
+            .await?;
     }
     grants
-        .set_direct(&admin, 3, sk::SELF_VIEW, Some(true))
+        .set_direct(
+            &admin,
+            3,
+            sk::SELF_VIEW,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
     let employee = saved(people.self_employee(&**client, &staff, 1).await)?;
     let profile = saved(skills.list_profiles(&manager, 1).await)?
@@ -658,7 +701,12 @@ pub async fn run(url: &str) -> Result<()> {
         "impersonated publication",
     )?;
     grants
-        .set_direct(&admin, 1, POLICY_MANAGE, Some(false))
+        .set_direct(
+            &admin,
+            1,
+            POLICY_MANAGE,
+            Some(bilibi_authz::grants::Direct::Deny),
+        )
         .await?;
     refused(
         pg.draft(&manager, 1, &performance_only).await,
@@ -666,27 +714,58 @@ pub async fn run(url: &str) -> Result<()> {
         "revoked grant on existing scope",
     )?;
     grants
-        .set_direct(&admin, 1, POLICY_MANAGE, Some(true))
+        .set_direct(
+            &admin,
+            1,
+            POLICY_MANAGE,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
     grants
-        .set_direct(&admin, 3, sk::SELF_VIEW, Some(false))
+        .set_direct(
+            &admin,
+            3,
+            sk::SELF_VIEW,
+            Some(bilibi_authz::grants::Direct::Deny),
+        )
         .await?;
     prove(
         pg.explain(&staff, 1).await.is_err(),
         "missing Skills evidence permission refuses explanation",
     )?;
     grants
-        .set_direct(&admin, 3, sk::SELF_VIEW, Some(true))
+        .set_direct(
+            &admin,
+            3,
+            sk::SELF_VIEW,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
     grants
-        .set_direct(&admin, 3, pm::SELF_VIEW, Some(false))
+        .set_direct(
+            &admin,
+            3,
+            pm::SELF_VIEW,
+            Some(bilibi_authz::grants::Direct::Deny),
+        )
         .await?;
     prove(
         pg.explain(&staff, 1).await.is_err(),
         "missing Performance evidence permission refuses explanation",
     )?;
     grants
-        .set_direct(&admin, 3, pm::SELF_VIEW, Some(true))
+        .set_direct(
+            &admin,
+            3,
+            pm::SELF_VIEW,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
     let users = services.get::<UserService>("core/user.accounts")?;
     saved(users.unlink(&admin, 3).await)?;
@@ -793,7 +872,12 @@ pub async fn run(url: &str) -> Result<()> {
     }
     prove(reached_lock, "second session waits for company lock")?;
     grants
-        .set_direct(&admin, 1, POLICY_MANAGE, Some(false))
+        .set_direct(
+            &admin,
+            1,
+            POLICY_MANAGE,
+            Some(bilibi_authz::grants::Direct::Deny),
+        )
         .await?;
     transaction.rollback().await?;
     refused(
@@ -802,7 +886,14 @@ pub async fn run(url: &str) -> Result<()> {
         "grant revoked while write waited for company lock",
     )?;
     grants
-        .set_direct(&admin, 1, POLICY_MANAGE, Some(true))
+        .set_direct(
+            &admin,
+            1,
+            POLICY_MANAGE,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
 
     let prior_count = saved(pg.explain(&staff, 1).await)?.explanations.len();

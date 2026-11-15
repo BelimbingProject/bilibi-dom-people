@@ -34,7 +34,16 @@ async fn run(url: &str) -> Result<()> {
     grants.reconcile().await?;
     for key in grants.vocabulary().capabilities.keys() {
         if key.starts_with("people.") || *key == bilibi_company::TENANT_WIDE {
-            grants.set_direct(&admin, 1, key, Some(true)).await?;
+            grants
+                .set_direct(
+                    &admin,
+                    1,
+                    key,
+                    Some(bilibi_authz::grants::Direct::Allow(
+                        bilibi_authz::Reach::All,
+                    )),
+                )
+                .await?;
         }
     }
     let manager = auth

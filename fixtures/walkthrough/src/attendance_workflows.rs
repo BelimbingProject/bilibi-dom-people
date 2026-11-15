@@ -72,10 +72,28 @@ pub async fn run(url: &str) -> Result<()> {
         ADJUSTMENTS_APPROVE,
         SELF_VIEW,
     ] {
-        grants.set_direct(&admin, MANAGER, key, Some(true)).await?;
+        grants
+            .set_direct(
+                &admin,
+                MANAGER,
+                key,
+                Some(bilibi_authz::grants::Direct::Allow(
+                    bilibi_authz::Reach::All,
+                )),
+            )
+            .await?;
     }
     for key in [SELF_VIEW, ADJUSTMENTS_APPROVE] {
-        grants.set_direct(&admin, STAFF, key, Some(true)).await?;
+        grants
+            .set_direct(
+                &admin,
+                STAFF,
+                key,
+                Some(bilibi_authz::grants::Direct::Allow(
+                    bilibi_authz::Reach::All,
+                )),
+            )
+            .await?;
     }
     let manager = auth
         .authenticate(&**c, TENANT, MANAGER, "walkthrough".into())
@@ -663,7 +681,12 @@ pub async fn run(url: &str) -> Result<()> {
     )?;
     // Revocation and account relinking must take effect on the next call with an earlier Scope.
     grants
-        .set_direct(&admin, MANAGER, ROSTER_MANAGE, Some(false))
+        .set_direct(
+            &admin,
+            MANAGER,
+            ROSTER_MANAGE,
+            Some(bilibi_authz::grants::Direct::Deny),
+        )
         .await?;
     refused_as(
         "revoked roster grant",
@@ -673,7 +696,14 @@ pub async fn run(url: &str) -> Result<()> {
         |e| matches!(e, AttendanceError::Unauthorized),
     )?;
     grants
-        .set_direct(&admin, MANAGER, ROSTER_MANAGE, Some(true))
+        .set_direct(
+            &admin,
+            MANAGER,
+            ROSTER_MANAGE,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
     users
         .unlink(&admin, STAFF)

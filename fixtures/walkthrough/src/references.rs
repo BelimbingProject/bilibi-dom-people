@@ -28,7 +28,14 @@ pub(crate) async fn run(
     let references = services.get::<ReferenceData>(REFERENCES_SERVICE)?;
     println!("-- reference data");
     grants
-        .set_direct(admin, MANAGER, REFERENCES_MANAGE, Some(true))
+        .set_direct(
+            admin,
+            MANAGER,
+            REFERENCES_MANAGE,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
     println!("admin grants manager@example.test {REFERENCES_MANAGE}");
 
@@ -209,7 +216,14 @@ pub(crate) async fn run(
             .await,
     );
     grants
-        .set_direct(admin, MANAGER, REFERENCES_MANAGE, Some(true))
+        .set_direct(
+            admin,
+            MANAGER,
+            REFERENCES_MANAGE,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
 
     // An archived company refuses the write; its references still read.

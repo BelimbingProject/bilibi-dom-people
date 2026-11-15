@@ -61,7 +61,16 @@ pub(crate) async fn run(url: &str, action: &str) -> Result<()> {
     let grants = services.get::<bilibi_authz::grants::Grants>("base/authz.grants")?;
     if matches!(action, "revoke" | "restore") {
         grants
-            .set_direct(&admin, 1, MANAGE, Some(action == "restore"))
+            .set_direct(
+                &admin,
+                1,
+                MANAGE,
+                Some(if action == "restore" {
+                    bilibi_authz::grants::Direct::Allow(bilibi_authz::Reach::All)
+                } else {
+                    bilibi_authz::grants::Direct::Deny
+                }),
+            )
             .await?;
         return Ok(());
     }
@@ -286,9 +295,20 @@ pub(crate) async fn run(url: &str, action: &str) -> Result<()> {
         "Cancel leaves the policy open",
     )?;
     event(page.as_mut(), &manager, end.clone()).await?;
-    grants.set_direct(&admin, 1, MANAGE, Some(false)).await?;
+    grants
+        .set_direct(&admin, 1, MANAGE, Some(bilibi_authz::grants::Direct::Deny))
+        .await?;
     let refused = event(page.as_mut(), &manager, json!({"type":"confirm_end"})).await?;
-    grants.set_direct(&admin, 1, MANAGE, Some(true)).await?;
+    grants
+        .set_direct(
+            &admin,
+            1,
+            MANAGE,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
+        .await?;
     require(
         refused.html.contains("You no longer have permission")
             && !refused.html.contains("claim-policies-table"),

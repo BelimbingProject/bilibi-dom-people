@@ -111,7 +111,14 @@ pub async fn run(url: &str) -> Result<()> {
     // Calculation proofs temporarily use this account as an independent
     // operator. Establish both document denials this proof is checking.
     for key in [MANAGE, VIEW] {
-        grants.set_direct(&admin, VIEWER, key, Some(false)).await?;
+        grants
+            .set_direct(
+                &admin,
+                VIEWER,
+                key,
+                Some(bilibi_authz::grants::Direct::Deny),
+            )
+            .await?;
     }
     let workforce = services.get::<Workforce>(bilibi_people_workforce::SERVICE)?;
     let employees = workforce
@@ -455,7 +462,12 @@ pub async fn run(url: &str) -> Result<()> {
             .is_err(),
     )?;
     grants
-        .set_direct(&admin, MANAGER, VIEW, Some(false))
+        .set_direct(
+            &admin,
+            MANAGER,
+            VIEW,
+            Some(bilibi_authz::grants::Direct::Deny),
+        )
         .await?;
     denied(
         "revoked view refuses same sealed scope",
@@ -477,9 +489,23 @@ pub async fn run(url: &str) -> Result<()> {
             .await
             .is_err(),
     )?;
-    grants.set_direct(&admin, MANAGER, VIEW, Some(true)).await?;
     grants
-        .set_direct(&admin, MANAGER, MANAGE, Some(false))
+        .set_direct(
+            &admin,
+            MANAGER,
+            VIEW,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
+        .await?;
+    grants
+        .set_direct(
+            &admin,
+            MANAGER,
+            MANAGE,
+            Some(bilibi_authz::grants::Direct::Deny),
+        )
         .await?;
     denied(
         "revoked manage refuses generation",
@@ -494,7 +520,14 @@ pub async fn run(url: &str) -> Result<()> {
         |e| matches!(e, Refusal::Unauthorized),
     )?;
     grants
-        .set_direct(&admin, MANAGER, MANAGE, Some(true))
+        .set_direct(
+            &admin,
+            MANAGER,
+            MANAGE,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
     // Fixture-only clock advancement, with every production guard still enabled.
     c.execute("UPDATE base_artifacts SET expires_at=created_at+interval '1 millisecond' WHERE tenant_id=$1 AND company_id=$2 AND public_id=$3", &[&TENANT, &COMPANY, &repeat.artifact_id]).await?;

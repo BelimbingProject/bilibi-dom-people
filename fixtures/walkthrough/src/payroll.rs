@@ -103,7 +103,16 @@ pub async fn run(url: &str) -> Result<()> {
         bilibi_people_claims::MANAGE,
         bilibi_people_claims::SUBMIT,
     ]) {
-        grants.set_direct(&admin, MANAGER, key, Some(true)).await?;
+        grants
+            .set_direct(
+                &admin,
+                MANAGER,
+                key,
+                Some(bilibi_authz::grants::Direct::Allow(
+                    bilibi_authz::Reach::All,
+                )),
+            )
+            .await?;
     }
     let initial = must("read empty setup", payroll.setup(&manager, COMPANY).await)?;
     check(
@@ -758,7 +767,12 @@ pub async fn run(url: &str) -> Result<()> {
         same.snapshot == run.snapshot && same.country == "proof-jurisdiction",
     )?;
     grants
-        .set_direct(&admin, MANAGER, MANAGE, Some(false))
+        .set_direct(
+            &admin,
+            MANAGER,
+            MANAGE,
+            Some(bilibi_authz::grants::Direct::Deny),
+        )
         .await?;
     denied(
         "revoked grant refuses next write",
@@ -766,7 +780,14 @@ pub async fn run(url: &str) -> Result<()> {
         |e| matches!(e, Refusal::Unauthorized),
     )?;
     grants
-        .set_direct(&admin, MANAGER, MANAGE, Some(true))
+        .set_direct(
+            &admin,
+            MANAGER,
+            MANAGE,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
     let companies = services.get::<bilibi_company::CompanyService>(bilibi_company::SERVICE)?;
     let archived = match companies

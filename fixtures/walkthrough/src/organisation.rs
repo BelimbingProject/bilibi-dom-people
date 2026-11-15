@@ -193,7 +193,14 @@ pub(crate) async fn run(services: &Services, client: &Client, cast: Cast<'_>) ->
     );
     for key in [VIEW, MANAGE] {
         grants
-            .set_direct(admin, manager_user, key, Some(true))
+            .set_direct(
+                admin,
+                manager_user,
+                key,
+                Some(bilibi_authz::grants::Direct::Allow(
+                    bilibi_authz::Reach::All,
+                )),
+            )
             .await?;
         println!("admin grants manager@example.test {key}");
     }
@@ -912,12 +919,24 @@ pub(crate) async fn run(services: &Services, client: &Client, cast: Cast<'_>) ->
         return Err(Error::Internal);
     }
     grants
-        .set_direct(admin, manager_user, MANAGE, Some(false))
+        .set_direct(
+            admin,
+            manager_user,
+            MANAGE,
+            Some(bilibi_authz::grants::Direct::Deny),
+        )
         .await?;
     lock.rollback().await?;
     let result = pending.await.map_err(|_| Error::Internal)?;
     grants
-        .set_direct(admin, manager_user, MANAGE, Some(true))
+        .set_direct(
+            admin,
+            manager_user,
+            MANAGE,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
     if !matches!(result, Err(OrganisationError::Unauthorized)) {
         return Err(Error::Internal);

@@ -520,7 +520,17 @@ async fn pw1(
     // write and Company 001 is not.
     println!("\n== PW1: reach over companies");
     for key in [EMPLOYMENT_MANAGE, bilibi_affiliation::contributions::PROVE] {
-        match grants.set_direct(admin, CONTRACTOR, key, Some(true)).await {
+        match grants
+            .set_direct(
+                admin,
+                CONTRACTOR,
+                key,
+                Some(bilibi_authz::grants::Direct::Allow(
+                    bilibi_authz::Reach::All,
+                )),
+            )
+            .await
+        {
             Ok(()) => println!("admin grants {key} to contractor@example.test directly"),
             Err(error) => {
                 println!("admin grants {key} to contractor@example.test: refused ({error})")

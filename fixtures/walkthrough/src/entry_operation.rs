@@ -234,14 +234,26 @@ pub(super) async fn run(
     let fresh_ops = [op(fresh)];
     let _review = preview(&plans, &browser, &fresh_ops).await?;
     grants
-        .set_direct(admin, scope.user(), POLICIES_MANAGE, Some(false))
+        .set_direct(
+            admin,
+            scope.user(),
+            POLICIES_MANAGE,
+            Some(bilibi_authz::grants::Direct::Deny),
+        )
         .await?;
     println!(
         "permission revoked after review: {:?}",
         plans.commit(&scope, &browser, &fresh_ops).await
     );
     grants
-        .set_direct(admin, scope.user(), POLICIES_MANAGE, Some(true))
+        .set_direct(
+            admin,
+            scope.user(),
+            POLICIES_MANAGE,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
     let _review = preview(&plans, &browser, &fresh_ops).await?;
     leave

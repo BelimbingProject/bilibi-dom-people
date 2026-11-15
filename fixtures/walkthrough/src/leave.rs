@@ -144,7 +144,14 @@ pub(crate) async fn run(
         leave.put_rules(manager, company, 4).await,
     );
     grants
-        .set_direct(admin, manager_user, POLICIES_MANAGE, Some(true))
+        .set_direct(
+            admin,
+            manager_user,
+            POLICIES_MANAGE,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
     println!("admin grants manager@example.test {POLICIES_MANAGE} directly");
     show(

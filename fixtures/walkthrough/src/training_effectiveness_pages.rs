@@ -114,7 +114,11 @@ pub async fn run(url: &str, action: &str) -> Result<()> {
                 &admin,
                 MANAGER,
                 EFFECTIVENESS_ANSWER,
-                Some(action == "allow-answer"),
+                Some(if action == "allow-answer" {
+                    bilibi_authz::grants::Direct::Allow(bilibi_authz::Reach::All)
+                } else {
+                    bilibi_authz::grants::Direct::Deny
+                }),
             )
             .await?;
         return Ok(());
@@ -125,7 +129,11 @@ pub async fn run(url: &str, action: &str) -> Result<()> {
                 &admin,
                 MANAGER,
                 EVALUATION_POLICY_MANAGE,
-                Some(action == "allow-policy"),
+                Some(if action == "allow-policy" {
+                    bilibi_authz::grants::Direct::Allow(bilibi_authz::Reach::All)
+                } else {
+                    bilibi_authz::grants::Direct::Deny
+                }),
             )
             .await?;
         return Ok(());
@@ -139,7 +147,16 @@ pub async fn run(url: &str, action: &str) -> Result<()> {
         EVALUATION_REMINDERS_MANAGE,
         EFFECTIVENESS_SUMMARY_VIEW,
     ] {
-        grants.set_direct(&admin, MANAGER, cap, Some(true)).await?;
+        grants
+            .set_direct(
+                &admin,
+                MANAGER,
+                cap,
+                Some(bilibi_authz::grants::Direct::Allow(
+                    bilibi_authz::Reach::All,
+                )),
+            )
+            .await?;
     }
     for cap in [
         "admin.company.tenant-wide.manage",
@@ -148,7 +165,16 @@ pub async fn run(url: &str, action: &str) -> Result<()> {
         EFFECTIVENESS_SUMMARY_VIEW,
         LEARNING_VIEW,
     ] {
-        grants.set_direct(&admin, VIEWER, cap, Some(true)).await?;
+        grants
+            .set_direct(
+                &admin,
+                VIEWER,
+                cap,
+                Some(bilibi_authz::grants::Direct::Allow(
+                    bilibi_authz::Reach::All,
+                )),
+            )
+            .await?;
     }
     for cap in [
         RECORDS_VIEW,
@@ -156,10 +182,26 @@ pub async fn run(url: &str, action: &str) -> Result<()> {
         EVALUATION_POLICY_MANAGE,
         EVALUATION_REMINDERS_MANAGE,
     ] {
-        grants.set_direct(&admin, VIEWER, cap, Some(false)).await?;
+        grants
+            .set_direct(
+                &admin,
+                VIEWER,
+                cap,
+                Some(bilibi_authz::grants::Direct::Deny),
+            )
+            .await?;
     }
     for cap in [LEARNING_VIEW, REQUESTS_SUBMIT, EVALUATION_SUBMIT] {
-        grants.set_direct(&admin, STAFF, cap, Some(true)).await?;
+        grants
+            .set_direct(
+                &admin,
+                STAFF,
+                cap,
+                Some(bilibi_authz::grants::Direct::Allow(
+                    bilibi_authz::Reach::All,
+                )),
+            )
+            .await?;
     }
     let workforce = services.get::<Workforce>(bilibi_people_workforce::SERVICE)?;
     let staff_id = workforce
@@ -390,7 +432,12 @@ pub async fn run(url: &str, action: &str) -> Result<()> {
         "HOD answer waits for irreversible confirmation",
     )?;
     grants
-        .set_direct(&admin, MANAGER, EFFECTIVENESS_ANSWER, Some(false))
+        .set_direct(
+            &admin,
+            MANAGER,
+            EFFECTIVENESS_ANSWER,
+            Some(bilibi_authz::grants::Direct::Deny),
+        )
         .await?;
     let body = event(&mut state, &manager, json!({"type":"confirm_answer"})).await?;
     proof(
@@ -398,7 +445,14 @@ pub async fn run(url: &str, action: &str) -> Result<()> {
         "mounted review refuses a revoked grant without clearing the page",
     )?;
     grants
-        .set_direct(&admin, MANAGER, EFFECTIVENESS_ANSWER, Some(true))
+        .set_direct(
+            &admin,
+            MANAGER,
+            EFFECTIVENESS_ANSWER,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
     event(
         &mut state,
@@ -528,7 +582,12 @@ pub async fn run(url: &str, action: &str) -> Result<()> {
         "authorized insights drills through bounded attendance in the display timezone",
     )?;
     grants
-        .set_direct(&admin, MANAGER, RECORDS_VIEW, Some(false))
+        .set_direct(
+            &admin,
+            MANAGER,
+            RECORDS_VIEW,
+            Some(bilibi_authz::grants::Direct::Deny),
+        )
         .await?;
     let body = refresh(&mut drill, &manager).await?;
     proof(
@@ -536,7 +595,14 @@ pub async fn run(url: &str, action: &str) -> Result<()> {
         "revoked record access removes drill rows on refresh",
     )?;
     grants
-        .set_direct(&admin, MANAGER, RECORDS_VIEW, Some(true))
+        .set_direct(
+            &admin,
+            MANAGER,
+            RECORDS_VIEW,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
     println!(
         "PT9 browser records ready: session {}, course {}",
@@ -561,7 +627,16 @@ async fn setup(services: &Services, admin: &Scope, manager: &Scope) -> Result<()
     let role = crate::tenant_owner_role(&**client, admin).await?;
     grants.assign_role(admin, MANAGER, role, true).await?;
     for cap in CAPABILITIES {
-        grants.set_direct(admin, MANAGER, cap, Some(true)).await?;
+        grants
+            .set_direct(
+                admin,
+                MANAGER,
+                cap,
+                Some(bilibi_authz::grants::Direct::Allow(
+                    bilibi_authz::Reach::All,
+                )),
+            )
+            .await?;
     }
     services
         .get::<ReferenceData>(bilibi_people_reference_data::SERVICE)?

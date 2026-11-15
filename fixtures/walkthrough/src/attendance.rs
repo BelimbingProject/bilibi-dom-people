@@ -74,10 +74,24 @@ async fn run(url: &str) -> Result<()> {
     // holds every key, grants the manager the rules and the staff account
     // its own view.
     grants
-        .set_direct(&admin, MANAGER, RULES_MANAGE, Some(true))
+        .set_direct(
+            &admin,
+            MANAGER,
+            RULES_MANAGE,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
     grants
-        .set_direct(&admin, STAFF, SELF_VIEW, Some(true))
+        .set_direct(
+            &admin,
+            STAFF,
+            SELF_VIEW,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
     println!("admin grants manager@example.test {RULES_MANAGE} and staff@example.test {SELF_VIEW}");
     let manager = authentication

@@ -79,7 +79,16 @@ async fn run(url: &str, mode: &str) -> Result<()> {
     }
     if mode == "revoke" || mode == "restore" {
         grants
-            .set_direct(&admin, MANAGER, SELF_VIEW, Some(mode == "restore"))
+            .set_direct(
+                &admin,
+                MANAGER,
+                SELF_VIEW,
+                Some(if mode == "restore" {
+                    bilibi_authz::grants::Direct::Allow(bilibi_authz::Reach::All)
+                } else {
+                    bilibi_authz::grants::Direct::Deny
+                }),
+            )
             .await?;
         return Ok(());
     }
@@ -90,7 +99,16 @@ async fn run(url: &str, mode: &str) -> Result<()> {
         (MANAGER, RULES_MANAGE),
         (MANAGER, ROSTER_MANAGE),
     ] {
-        grants.set_direct(&admin, user, key, Some(true)).await?;
+        grants
+            .set_direct(
+                &admin,
+                user,
+                key,
+                Some(bilibi_authz::grants::Direct::Allow(
+                    bilibi_authz::Reach::All,
+                )),
+            )
+            .await?;
     }
     let manager = authentication
         .authenticate(&**c, TENANT, MANAGER, "walkthrough".into())

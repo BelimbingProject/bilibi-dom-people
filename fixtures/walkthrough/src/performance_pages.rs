@@ -176,7 +176,12 @@ pub(super) async fn verify(services: &Services) -> Result<()> {
     )?;
     event(&mut state, &manager, definition.clone()).await?;
     grants
-        .set_direct(&admin, 1, pm::KPIS_SUBMIT, Some(false))
+        .set_direct(
+            &admin,
+            1,
+            pm::KPIS_SUBMIT,
+            Some(bilibi_authz::grants::Direct::Deny),
+        )
         .await?;
     let body = confirm(&mut state, &manager).await?;
     require(
@@ -184,7 +189,14 @@ pub(super) async fn verify(services: &Services) -> Result<()> {
         "grant revoked after confirmation refuses the next event",
     )?;
     grants
-        .set_direct(&admin, 1, pm::KPIS_SUBMIT, Some(true))
+        .set_direct(
+            &admin,
+            1,
+            pm::KPIS_SUBMIT,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
     event(&mut state, &manager, definition).await?;
     let body = confirm(&mut state, &manager).await?;
@@ -638,7 +650,16 @@ pub(super) async fn verify(services: &Services) -> Result<()> {
     .map_err(|_| Error::Internal)?;
 
     // Keep a view-only account available for the browser proof as well.
-    grants.set_direct(&admin, 2, pm::VIEW, Some(true)).await?;
+    grants
+        .set_direct(
+            &admin,
+            2,
+            pm::VIEW,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
+        .await?;
     let viewer = auth
         .authenticate(&**client, 1, 2, "walkthrough".into())
         .await?;

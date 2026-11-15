@@ -48,7 +48,16 @@ async fn main() -> Outcome<()> {
     drop(client);
     for key in grants.vocabulary().capabilities.keys() {
         if key.starts_with("people.") {
-            grants.set_direct(&admin, 1, key, Some(true)).await?;
+            grants
+                .set_direct(
+                    &admin,
+                    1,
+                    key,
+                    Some(bilibi_authz::grants::Direct::Allow(
+                        bilibi_authz::Reach::All,
+                    )),
+                )
+                .await?;
         }
     }
     let workforce = services.get::<Workforce>(bilibi_people_workforce::SERVICE)?;

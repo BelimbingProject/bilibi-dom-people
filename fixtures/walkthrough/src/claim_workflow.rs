@@ -94,7 +94,14 @@ pub(crate) async fn run(
     .map_err(|_| Error::Internal)?;
     for capability in [SUBMIT, APPROVE, REIMBURSE] {
         grants
-            .set_direct(admin, STAFF, capability, Some(true))
+            .set_direct(
+                admin,
+                STAFF,
+                capability,
+                Some(bilibi_authz::grants::Direct::Allow(
+                    bilibi_authz::Reach::All,
+                )),
+            )
             .await?;
     }
     let staff = authentication
@@ -855,13 +862,29 @@ pub(crate) async fn run(
     )?;
 
     // An old scope must not keep acting after grants or the account link change.
-    grants.set_direct(admin, STAFF, SUBMIT, Some(false)).await?;
+    grants
+        .set_direct(
+            admin,
+            STAFF,
+            SUBMIT,
+            Some(bilibi_authz::grants::Direct::Deny),
+        )
+        .await?;
     refuses(
         "grant revoked on old scope",
         claims.submit_request(&staff, COMPANY, &low).await,
         ClaimsError::Unauthorized,
     )?;
-    grants.set_direct(admin, STAFF, SUBMIT, Some(true)).await?;
+    grants
+        .set_direct(
+            admin,
+            STAFF,
+            SUBMIT,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
+        .await?;
     users
         .unlink(admin, STAFF)
         .await

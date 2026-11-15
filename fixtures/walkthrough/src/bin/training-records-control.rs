@@ -121,7 +121,18 @@ async fn main() -> Result<()> {
         }
         "hub-only" => {
             for (key, enabled) in [(RECORDS_WORKSPACE_VIEW, true), (RECORDS_VIEW, false)] {
-                grants.set_direct(&admin, 3, key, Some(enabled)).await?;
+                grants
+                    .set_direct(
+                        &admin,
+                        3,
+                        key,
+                        Some(if enabled {
+                            bilibi_authz::grants::Direct::Allow(bilibi_authz::Reach::All)
+                        } else {
+                            bilibi_authz::grants::Direct::Deny
+                        }),
+                    )
+                    .await?;
             }
         }
         _ => {
@@ -139,7 +150,18 @@ async fn main() -> Result<()> {
                 "workspace" => RECORDS_WORKSPACE_VIEW,
                 _ => return Err(Error::Invalid),
             };
-            grants.set_direct(&admin, 1, key, Some(enabled)).await?;
+            grants
+                .set_direct(
+                    &admin,
+                    1,
+                    key,
+                    Some(if enabled {
+                        bilibi_authz::grants::Direct::Allow(bilibi_authz::Reach::All)
+                    } else {
+                        bilibi_authz::grants::Direct::Deny
+                    }),
+                )
+                .await?;
         }
     }
     println!("PT7 browser condition applied: {command}");
@@ -156,20 +178,45 @@ async fn prepare(services: &Services, admin: &bilibi_tenancy::Scope) -> Result<(
     drop(client);
     let grants = services.get::<Grants>("base/authz.grants")?;
     for key in CAPABILITIES {
-        grants.set_direct(admin, 1, key, Some(true)).await?;
+        grants
+            .set_direct(
+                admin,
+                1,
+                key,
+                Some(bilibi_authz::grants::Direct::Allow(
+                    bilibi_authz::Reach::All,
+                )),
+            )
+            .await?;
     }
     for key in [RECORDS_WORKSPACE_VIEW, PASSPORT_MY_VIEW, PASSPORT_GENERATE] {
-        grants.set_direct(admin, 3, key, Some(true)).await?;
+        grants
+            .set_direct(
+                admin,
+                3,
+                key,
+                Some(bilibi_authz::grants::Direct::Allow(
+                    bilibi_authz::Reach::All,
+                )),
+            )
+            .await?;
     }
     grants
-        .set_direct(admin, 3, RECORDS_VIEW, Some(false))
+        .set_direct(
+            admin,
+            3,
+            RECORDS_VIEW,
+            Some(bilibi_authz::grants::Direct::Deny),
+        )
         .await?;
     grants
         .set_direct(
             admin,
             1,
             bilibi_people_workforce::EMPLOYMENT_VIEW,
-            Some(true),
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
         )
         .await?;
     let references = services.get::<bilibi_people_reference_data::ReferenceData>(

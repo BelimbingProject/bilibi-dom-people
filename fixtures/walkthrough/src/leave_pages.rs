@@ -35,10 +35,37 @@ pub(super) async fn run(url: &str) -> Result<()> {
         .authenticate(&**client, 1, 4, "walkthrough".into())
         .await?;
     for key in [SELF_VIEW, REQUESTS_APPROVE, POLICIES_MANAGE] {
-        grants.set_direct(&admin, 1, key, Some(true)).await?;
+        grants
+            .set_direct(
+                &admin,
+                1,
+                key,
+                Some(bilibi_authz::grants::Direct::Allow(
+                    bilibi_authz::Reach::All,
+                )),
+            )
+            .await?;
     }
-    grants.set_direct(&admin, 3, SELF_VIEW, Some(true)).await?;
-    grants.set_direct(&admin, 7, SELF_VIEW, Some(true)).await?;
+    grants
+        .set_direct(
+            &admin,
+            3,
+            SELF_VIEW,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
+        .await?;
+    grants
+        .set_direct(
+            &admin,
+            7,
+            SELF_VIEW,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
+        .await?;
     let manager = auth
         .authenticate(&**client, 1, 1, "walkthrough".into())
         .await?;

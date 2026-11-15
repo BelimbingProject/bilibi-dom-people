@@ -202,7 +202,14 @@ async fn run(url: &str) -> Result<()> {
         .chain(bilibi_people_leave::CAPABILITIES)
     {
         grants
-            .set_direct(&admin, manager_id, key, Some(true))
+            .set_direct(
+                &admin,
+                manager_id,
+                key,
+                Some(bilibi_authz::grants::Direct::Allow(
+                    bilibi_authz::Reach::All,
+                )),
+            )
             .await?;
     }
     for key in [
@@ -212,7 +219,16 @@ async fn run(url: &str) -> Result<()> {
         bilibi_people_training::REQUESTS_SUBMIT,
         bilibi_people_leave::SELF_VIEW,
     ] {
-        grants.set_direct(&admin, staff_id, key, Some(true)).await?;
+        grants
+            .set_direct(
+                &admin,
+                staff_id,
+                key,
+                Some(bilibi_authz::grants::Direct::Allow(
+                    bilibi_authz::Reach::All,
+                )),
+            )
+            .await?;
     }
     let manager = login_scope(&services, "onedoor-reviewer@example.test").await?;
     let staff = login_scope(&services, "onedoor-employee@example.test").await?;

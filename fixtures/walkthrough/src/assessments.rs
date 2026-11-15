@@ -106,7 +106,14 @@ pub(crate) async fn run(services: &Services, client: &Client, c: Context<'_>) ->
         SELF_VIEW,
     ] {
         grants
-            .set_direct(c.admin, super::MANAGER, capability, Some(true))
+            .set_direct(
+                c.admin,
+                super::MANAGER,
+                capability,
+                Some(bilibi_authz::grants::Direct::Allow(
+                    bilibi_authz::Reach::All,
+                )),
+            )
             .await?;
     }
     for capability in [
@@ -118,7 +125,14 @@ pub(crate) async fn run(services: &Services, client: &Client, c: Context<'_>) ->
         SELF_VIEW,
     ] {
         grants
-            .set_direct(c.admin, super::STAFF, capability, Some(true))
+            .set_direct(
+                c.admin,
+                super::STAFF,
+                capability,
+                Some(bilibi_authz::grants::Direct::Allow(
+                    bilibi_authz::Reach::All,
+                )),
+            )
             .await?;
     }
     // An unlinked viewer needs the company axis to reach this company at
@@ -128,14 +142,30 @@ pub(crate) async fn run(services: &Services, client: &Client, c: Context<'_>) ->
             c.admin,
             super::VIEWER,
             bilibi_company::TENANT_WIDE,
-            Some(true),
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
         )
         .await?;
     grants
-        .set_direct(c.admin, super::VIEWER, ASSESSMENTS_SUBMIT, Some(true))
+        .set_direct(
+            c.admin,
+            super::VIEWER,
+            ASSESSMENTS_SUBMIT,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
     grants
-        .set_direct(c.admin, super::VIEWER, ASSESSMENTS_VIEW, Some(true))
+        .set_direct(
+            c.admin,
+            super::VIEWER,
+            ASSESSMENTS_VIEW,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
     let staff_employment = workforce
         .employment(client, c.admin, company, c.staff_employee)
@@ -960,7 +990,12 @@ pub(crate) async fn run(services: &Services, client: &Client, c: Context<'_>) ->
     )?;
     // Revoked grants and unlinked accounts are checked against this same Scope.
     grants
-        .set_direct(c.admin, super::MANAGER, ASSESSMENTS_SUBMIT, Some(false))
+        .set_direct(
+            c.admin,
+            super::MANAGER,
+            ASSESSMENTS_SUBMIT,
+            Some(bilibi_authz::grants::Direct::Deny),
+        )
         .await?;
     refuses(
         "revoked grant with old scope",
@@ -977,7 +1012,14 @@ pub(crate) async fn run(services: &Services, client: &Client, c: Context<'_>) ->
         |e| matches!(e, SkillsError::Unauthorized),
     )?;
     grants
-        .set_direct(c.admin, super::MANAGER, ASSESSMENTS_SUBMIT, Some(true))
+        .set_direct(
+            c.admin,
+            super::MANAGER,
+            ASSESSMENTS_SUBMIT,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
     users
         .unlink(c.admin, super::STAFF)

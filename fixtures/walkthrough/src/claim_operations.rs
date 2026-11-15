@@ -76,12 +76,33 @@ pub(super) async fn run(services: &Services) -> Result<()> {
     let grants = services.get::<Grants>("base/authz.grants")?;
     // Viewer can read the queue but cannot pay, batch, or export.
     grants
-        .set_direct(&admin, VIEWER, APPROVE, Some(true))
+        .set_direct(
+            &admin,
+            VIEWER,
+            APPROVE,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
     grants
-        .set_direct(&admin, VIEWER, REIMBURSE, Some(false))
+        .set_direct(
+            &admin,
+            VIEWER,
+            REIMBURSE,
+            Some(bilibi_authz::grants::Direct::Deny),
+        )
         .await?;
-    grants.set_direct(&admin, STAFF, SUBMIT, Some(true)).await?;
+    grants
+        .set_direct(
+            &admin,
+            STAFF,
+            SUBMIT,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
+        .await?;
     let claims = services.get::<Claims>(bilibi_people_claims::SERVICE)?;
     let check = |error| {
         eprintln!("PC5 fixture: {error:?}");
@@ -261,7 +282,16 @@ async fn command(url: &str, command: Option<&str>) -> Result<()> {
             .await?;
         services
             .get::<Grants>("base/authz.grants")?
-            .set_direct(&admin, MANAGER, capability, Some(enabled))
+            .set_direct(
+                &admin,
+                MANAGER,
+                capability,
+                Some(if enabled {
+                    bilibi_authz::grants::Direct::Allow(bilibi_authz::Reach::All)
+                } else {
+                    bilibi_authz::grants::Direct::Deny
+                }),
+            )
             .await?;
         println!("PC5 manager grant {capability}: {enabled}");
         Ok(())

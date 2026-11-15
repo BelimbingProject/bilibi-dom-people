@@ -74,7 +74,16 @@ pub(super) async fn run(url: &str, action: &str) -> Result<()> {
     match action {
         "revoke" | "restore" => {
             grants
-                .set_direct(&admin, 1, SETTINGS_MANAGE, Some(action == "restore"))
+                .set_direct(
+                    &admin,
+                    1,
+                    SETTINGS_MANAGE,
+                    Some(if action == "restore" {
+                        bilibi_authz::grants::Direct::Allow(bilibi_authz::Reach::All)
+                    } else {
+                        bilibi_authz::grants::Direct::Deny
+                    }),
+                )
                 .await?;
             println!("PW2 changed manager settings grant: {action}");
             return Ok(());
@@ -98,7 +107,16 @@ pub(super) async fn run(url: &str, action: &str) -> Result<()> {
         bilibi_company::TENANT_WIDE,
         bilibi_affiliation::contributions::LIST,
     ] {
-        grants.set_direct(&admin, 1, key, Some(true)).await?;
+        grants
+            .set_direct(
+                &admin,
+                1,
+                key,
+                Some(bilibi_authz::grants::Direct::Allow(
+                    bilibi_authz::Reach::All,
+                )),
+            )
+            .await?;
     }
     let first = saved(
         workforce
@@ -290,7 +308,7 @@ pub(super) async fn run(url: &str, action: &str) -> Result<()> {
             &admin,
             2,
             bilibi_affiliation::contributions::LIST,
-            Some(false),
+            Some(bilibi_authz::grants::Direct::Deny),
         )
         .await?;
     let hidden = ports
@@ -435,7 +453,12 @@ pub(super) async fn run(url: &str, action: &str) -> Result<()> {
         "table events retain success flash",
     )?;
     grants
-        .set_direct(&admin, 1, SETTINGS_MANAGE, Some(false))
+        .set_direct(
+            &admin,
+            1,
+            SETTINGS_MANAGE,
+            Some(bilibi_authz::grants::Direct::Deny),
+        )
         .await?;
     let body = event(
         &mut *state,
@@ -450,7 +473,14 @@ pub(super) async fn run(url: &str, action: &str) -> Result<()> {
         "revoked settings grant refuses the next live event",
     )?;
     grants
-        .set_direct(&admin, 1, SETTINGS_MANAGE, Some(true))
+        .set_direct(
+            &admin,
+            1,
+            SETTINGS_MANAGE,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
     saved(
         workforce
@@ -458,10 +488,24 @@ pub(super) async fn run(url: &str, action: &str) -> Result<()> {
             .await,
     )?;
     grants
-        .set_direct(&admin, 2, SETTINGS_MANAGE, Some(true))
+        .set_direct(
+            &admin,
+            2,
+            SETTINGS_MANAGE,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
     grants
-        .set_direct(&admin, 2, bilibi_company::TENANT_WIDE, Some(true))
+        .set_direct(
+            &admin,
+            2,
+            bilibi_company::TENANT_WIDE,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
     // The viewer can save settings but has no grant for private employment counts.
     let body = pages

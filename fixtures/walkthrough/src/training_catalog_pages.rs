@@ -48,7 +48,16 @@ pub(crate) async fn run(
         SESSIONS_VIEW,
         "admin.company.tenant-wide.manage",
     ] {
-        grants.set_direct(admin, VIEWER, cap, Some(true)).await?;
+        grants
+            .set_direct(
+                admin,
+                VIEWER,
+                cap,
+                Some(bilibi_authz::grants::Direct::Allow(
+                    bilibi_authz::Reach::All,
+                )),
+            )
+            .await?;
     }
     let path = HashMap::new();
     let query = HashMap::from([("company_id".into(), COMPANY.to_string())]);
@@ -144,7 +153,12 @@ pub(crate) async fn run(
     )
     .await?;
     grants
-        .set_direct(admin, MANAGER, COURSES_MANAGE, Some(false))
+        .set_direct(
+            admin,
+            MANAGER,
+            COURSES_MANAGE,
+            Some(bilibi_authz::grants::Direct::Deny),
+        )
         .await?;
     let refused = send(
         &mut *courses,
@@ -165,7 +179,14 @@ pub(crate) async fn run(
         "revoked grant refuses the next event and keeps the live page",
     )?;
     grants
-        .set_direct(admin, MANAGER, COURSES_MANAGE, Some(true))
+        .set_direct(
+            admin,
+            MANAGER,
+            COURSES_MANAGE,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
     for n in 0..28 {
         training

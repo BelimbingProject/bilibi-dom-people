@@ -114,7 +114,16 @@ pub(crate) async fn run(
             EVALUATION_REMINDERS_MANAGE,
             REQUESTS_SUBMIT,
         ] {
-            grants.set_direct(admin, user, key, Some(true)).await?;
+            grants
+                .set_direct(
+                    admin,
+                    user,
+                    key,
+                    Some(bilibi_authz::grants::Direct::Allow(
+                        bilibi_authz::Reach::All,
+                    )),
+                )
+                .await?;
         }
     }
     let employment = workforce
@@ -500,7 +509,12 @@ pub(crate) async fn run(
     )?;
     // The same sealed scope must see grant revocation immediately.
     grants
-        .set_direct(admin, MANAGER, EFFECTIVENESS_ANSWER, Some(false))
+        .set_direct(
+            admin,
+            MANAGER,
+            EFFECTIVENESS_ANSWER,
+            Some(bilibi_authz::grants::Direct::Deny),
+        )
         .await?;
     refused(
         "revoked grant",
@@ -516,7 +530,14 @@ pub(crate) async fn run(
         TrainingError::Unauthorized,
     )?;
     grants
-        .set_direct(admin, MANAGER, EFFECTIVENESS_ANSWER, Some(true))
+        .set_direct(
+            admin,
+            MANAGER,
+            EFFECTIVENESS_ANSWER,
+            Some(bilibi_authz::grants::Direct::Allow(
+                bilibi_authz::Reach::All,
+            )),
+        )
         .await?;
     // A latest absent revision hides all earlier confirmed obligations.
     saved(
