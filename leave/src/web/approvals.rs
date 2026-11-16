@@ -149,10 +149,11 @@ impl LiveState<Scope, Error> for Approvals {
                     .unwrap_or("")
                 {
                     "clear-flash" => self.flash.clear(payload),
-                    "approvals_grid" => self.table.event(payload),
+                    "approvals_grid" => self.table.event(payload)?,
                     "filters" => {
                         self.company_id = params::positive_id(
-                            params::form_values(payload, "filters")
+                            params::form_values_checked(payload, "filters", params::FIELD_LIMIT)
+                                .map_err(bilibi_database::Error::refused)?
                                 .get("company_id")
                                 .map(String::as_str),
                         )

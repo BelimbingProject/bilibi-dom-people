@@ -106,7 +106,6 @@ impl Performance {
         w.tx.commit().await?;
         Ok(saved)
     }
-    #[allow(clippy::too_many_arguments)]
     pub(crate) async fn validate_description(
         &self,
         client: &(impl tokio_postgres::GenericClient + Sync),

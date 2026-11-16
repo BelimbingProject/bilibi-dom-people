@@ -509,7 +509,10 @@ impl Records {
         let event = posted(payload, "type");
         if let Some(table) = event.strip_prefix("grid-") {
             if let Some(columns) = self.columns.get_mut(table) {
-                columns.handle(&params::string_values(payload));
+                columns.handle(
+                    &params::string_values_checked(payload, params::FIELD_LIMIT)
+                        .map_err(bilibi_database::Error::refused)?,
+                );
             }
             return Ok(());
         }
@@ -528,7 +531,8 @@ impl Records {
                 return Ok(());
             }
             "select_company" | "filter" | "filters" => {
-                let values = params::form_values(payload, "filters");
+                let values = params::form_values_checked(payload, "filters", params::FIELD_LIMIT)
+                    .map_err(bilibi_database::Error::refused)?;
                 let changed_company = values.get("company_id").is_some_and(|id| {
                     Some(id.as_str()) != self.list.filters.get("company_id").map(String::as_str)
                 });
@@ -602,7 +606,8 @@ impl Records {
         }
         match event.as_str() {
             "record" => {
-                self.draft = params::form_values(payload, "record");
+                self.draft = params::form_values_checked(payload, "record", params::FIELD_LIMIT)
+                    .map_err(bilibi_database::Error::refused)?;
                 // Retain the full allowed reason, beyond form_values' generic 1 KiB bound.
                 self.draft
                     .insert("reason".into(), posted(payload, "record[reason]"));

@@ -269,8 +269,8 @@ impl Actions {
         let event = text(payload, "type");
         match event {
             "clear-flash" => self.flash.clear(payload),
-            "actions_grid" => self.table.event(payload),
-            "history_grid" => self.history_table.event(payload),
+            "actions_grid" => self.table.event(payload)?,
+            "history_grid" => self.history_table.event(payload)?,
             "dismiss_confirm" => self.pending = None,
             "hide_progress" => self.progress_id = None,
             "show_progress" => {

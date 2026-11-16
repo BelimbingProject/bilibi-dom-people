@@ -249,10 +249,10 @@ impl PolicyPage {
     async fn event(&mut self, scope: &Scope, payload: &Value) -> Result<bool> {
         match text(payload, "type") {
             "clear-flash" => self.flash.clear(payload),
-            "types_grid" => self.types_table.event(payload),
-            "requests_grid" => self.requests_table.event(payload),
-            "due_grid" => self.due_table.event(payload),
-            "ledger_grid" => self.ledger_table.event(payload),
+            "types_grid" => self.types_table.event(payload)?,
+            "requests_grid" => self.requests_table.event(payload)?,
+            "due_grid" => self.due_table.event(payload)?,
+            "ledger_grid" => self.ledger_table.event(payload)?,
             "dismiss_confirm" => self.pending = None,
             "hide_reassessment" => self.selected_reassessment = None,
             "show_reassessment" => {

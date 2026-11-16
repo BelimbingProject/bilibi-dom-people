@@ -180,8 +180,12 @@ impl Table {
         self.columns.suggestions = suggestions;
         self.columns.add_query = query;
     }
-    fn event(&mut self, payload: &Value) {
-        self.columns.handle(&params::string_values(payload));
+    fn event(&mut self, payload: &Value) -> bilibi_database::Result<()> {
+        self.columns.handle(
+            &params::string_values_checked(payload, params::FIELD_LIMIT)
+                .map_err(bilibi_database::Error::refused)?,
+        );
+        Ok(())
     }
     fn render(&self, caption: &str, rows: Vec<FlexRow>, empty: &str) -> Result<Html> {
         let none = rows.is_empty();

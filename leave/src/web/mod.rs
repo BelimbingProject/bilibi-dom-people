@@ -184,8 +184,12 @@ impl Table {
     fn load<T>(&mut self, rows: &[T], key: impl Fn(&T) -> String) {
         self.columns.load(rows, key);
     }
-    fn event(&mut self, payload: &Value) {
-        self.columns.handle(&params::string_values(payload));
+    fn event(&mut self, payload: &Value) -> bilibi_database::Result<()> {
+        self.columns.handle(
+            &params::string_values_checked(payload, params::FIELD_LIMIT)
+                .map_err(bilibi_database::Error::refused)?,
+        );
+        Ok(())
     }
     fn render(&self, caption: &str, rows: Vec<FlexRow>, empty: EmptyState) -> Result<Html> {
         let none = rows.is_empty();

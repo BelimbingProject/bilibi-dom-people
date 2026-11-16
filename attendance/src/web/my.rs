@@ -229,7 +229,8 @@ impl MyAttendance {
             .iter()
             .position(|event| *event == kind)
         {
-            let values = params::string_values(payload);
+            let values = params::string_values_checked(payload, params::FIELD_LIMIT)
+                .map_err(bilibi_database::Error::refused)?;
             let _: ColumnsOutcome = self.columns[index].handle(&values);
             return Ok(false);
         }
@@ -294,7 +295,8 @@ impl MyAttendance {
                 }
             }
             "request_adjustment" => {
-                self.form = params::form_values(payload, "adjustment");
+                self.form = params::form_values_checked(payload, "adjustment", params::FIELD_LIMIT)
+                    .map_err(bilibi_database::Error::refused)?;
                 let Some(event_type) = self
                     .form
                     .get("event_type")

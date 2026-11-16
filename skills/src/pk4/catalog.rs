@@ -216,19 +216,19 @@ impl Catalog {
                 return Ok(false);
             }
             "categories_grid" => {
-                self.categories_table.event(p);
+                self.categories_table.event(p)?;
                 return Ok(false);
             }
             "skills_grid" => {
-                self.skills_table.event(p);
+                self.skills_table.event(p)?;
                 return Ok(false);
             }
             "scales_grid" => {
-                self.scales_table.event(p);
+                self.scales_table.event(p)?;
                 return Ok(false);
             }
             "profiles_grid" => {
-                self.profiles_table.event(p);
+                self.profiles_table.event(p)?;
                 return Ok(false);
             }
             e if e.starts_with("levels_grid_") => {
@@ -237,7 +237,7 @@ impl Catalog {
                     .and_then(|id| id.parse::<i64>().ok())
                     .and_then(|id| self.levels.get_mut(&id))
                 {
-                    table.event(p);
+                    table.event(p)?;
                 }
                 return Ok(false);
             }

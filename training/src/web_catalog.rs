@@ -374,15 +374,22 @@ impl Catalog {
                 return Ok(());
             }
             "grid" => {
-                self.columns.handle(&params::string_values(payload));
+                self.columns.handle(
+                    &params::string_values_checked(payload, params::FIELD_LIMIT)
+                        .map_err(bilibi_database::Error::refused)?,
+                );
                 return Ok(());
             }
             "session-grid" => {
-                self.session_columns.handle(&params::string_values(payload));
+                self.session_columns.handle(
+                    &params::string_values_checked(payload, params::FIELD_LIMIT)
+                        .map_err(bilibi_database::Error::refused)?,
+                );
                 return Ok(());
             }
             "filter" | "select_company" | "filters" => {
-                let values = params::form_values(payload, "filters");
+                let values = params::form_values_checked(payload, "filters", params::FIELD_LIMIT)
+                    .map_err(bilibi_database::Error::refused)?;
                 self.list.apply_filters(&values);
                 self.session_list.apply_filters(&values);
                 self.modal = None;
