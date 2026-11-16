@@ -471,7 +471,7 @@ impl Workforce {
         let settings_client = self
             .db
             .try_get_detached(
-                "resolve workforce settings while an Artifacts proof holds a connection",
+                "reads Settings while the caller holds its Artifacts connection; refused at once on a full pool",
             )
             .await
             .map_err(Error::from)?;

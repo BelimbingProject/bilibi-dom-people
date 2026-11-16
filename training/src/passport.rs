@@ -217,9 +217,13 @@ impl Training {
             .passport_document_guard(&mut client, scope, company, Some(audience.capability()))
             .await?;
         let rows = store::all_passport(guard.sql(), scope.tenant(), company, employee).await?;
-        let mut timeouts = self.db.timeouts();
-        timeouts.wait = Some(std::time::Duration::ZERO);
-        let mut artifact_client = self.db.timeout_get(&timeouts).await.map_err(Error::from)?;
+        let mut artifact_client = self
+            .db
+            .try_get_detached(
+                "the Artifacts connection beside the passport guard's transaction; refused at once on a full pool",
+            )
+            .await
+            .map_err(Error::from)?;
         let owner = self.document_owner();
         let generated = self.artifacts.for_owner(scope, OrganisationId::new(company)?, &owner).generate_pdf(
             &mut artifact_client,
@@ -246,9 +250,13 @@ impl Training {
         let guard = self
             .passport_document_guard(&mut client, scope, company, Some(capability))
             .await?;
-        let mut timeouts = self.db.timeouts();
-        timeouts.wait = Some(std::time::Duration::ZERO);
-        let mut artifact_client = self.db.timeout_get(&timeouts).await.map_err(Error::from)?;
+        let mut artifact_client = self
+            .db
+            .try_get_detached(
+                "the Artifacts connection beside the passport guard's transaction; refused at once on a full pool",
+            )
+            .await
+            .map_err(Error::from)?;
         let owner = self.document_owner();
         let document = self
             .artifacts
@@ -282,9 +290,13 @@ impl Training {
         let guard = self
             .passport_document_guard(&mut client, scope, company, capability)
             .await?;
-        let mut timeouts = self.db.timeouts();
-        timeouts.wait = Some(std::time::Duration::ZERO);
-        let mut artifact_client = self.db.timeout_get(&timeouts).await.map_err(Error::from)?;
+        let mut artifact_client = self
+            .db
+            .try_get_detached(
+                "the Artifacts connection beside the passport guard's transaction; refused at once on a full pool",
+            )
+            .await
+            .map_err(Error::from)?;
         let owner = self.document_owner();
         let document = self
             .artifacts
