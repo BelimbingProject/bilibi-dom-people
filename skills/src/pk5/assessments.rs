@@ -333,13 +333,13 @@ impl Assessments {
                 self.reset();
             }
             "filter_register" => self.status = status(Some(text(p, "status"))),
-            "review_grid" => self.review_table.event(p),
-            "finalize_grid" => self.finalize_table.event(p),
-            "returned_grid" => self.returned_table.event(p),
-            "register_grid" => self.register_table.event(p),
-            "gaps_grid" => self.gaps_table.event(p),
-            "coverage_grid" => self.coverage_table.event(p),
-            "requests_grid" => self.requests_table.event(p),
+            "review_grid" => self.review_table.event(p)?,
+            "finalize_grid" => self.finalize_table.event(p)?,
+            "returned_grid" => self.returned_table.event(p)?,
+            "register_grid" => self.register_table.event(p)?,
+            "gaps_grid" => self.gaps_table.event(p)?,
+            "coverage_grid" => self.coverage_table.event(p)?,
+            "requests_grid" => self.requests_table.event(p)?,
             "dismiss_confirm" => self.pending = None,
             "dismiss_return" => self.returning = None,
             "dismiss_perform" => {

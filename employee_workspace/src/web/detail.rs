@@ -429,7 +429,6 @@ impl Detail {
         }
         field
     }
-    #[allow(clippy::too_many_arguments)]
     fn text(
         &self,
         key: &str,
@@ -446,7 +445,6 @@ impl Detail {
             render(&InlineEdit { field })
         }
     }
-    #[allow(clippy::too_many_arguments)]
     fn choice(
         &self,
         key: &str,
@@ -1042,16 +1040,18 @@ impl Detail {
                 }
             }
             "requests_grid" => {
-                if let ColumnsOutcome::Sort(key) =
-                    self.columns.handle(&params::string_values(payload))
-                {
+                if let ColumnsOutcome::Sort(key) = self.columns.handle(
+                    &params::string_values_checked(payload, params::FIELD_LIMIT)
+                        .map_err(bilibi_database::Error::refused)?,
+                ) {
                     self.list.next_sort(&key);
                 }
             }
             "cancel_review" => self.pending_review = None,
             "save_field" => self.save_inline(scope, payload).await,
             "request_change" if self.can_manage && self.employee.is_some() => {
-                self.request = params::form_values(payload, "request");
+                self.request = params::form_values_checked(payload, "request", params::FIELD_LIMIT)
+                    .map_err(bilibi_database::Error::refused)?;
                 self.errors.clear();
                 let request = NewChangeRequest {
                     field: self.request.get("field").cloned().unwrap_or_default(),

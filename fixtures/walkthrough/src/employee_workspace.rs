@@ -2,7 +2,6 @@ use super::*;
 
 // Employee Workspace (PE1): owns its proof records and leaves a linked Person
 // without employment for the Add employment dialog's browser interaction.
-#[allow(clippy::too_many_arguments)]
 async fn employee_workspace_proof(
     services: &Services,
     grants: &Grants,

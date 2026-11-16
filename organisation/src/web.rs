@@ -327,8 +327,10 @@ impl Explorer {
             "clear-flash" => self.flash = None,
             "filters" | "filter" => {
                 self.clear_selection();
-                self.list
-                    .apply_filters(&params::form_values(payload, "filters"));
+                self.list.apply_filters(
+                    &params::form_values_checked(payload, "filters", params::FIELD_LIMIT)
+                        .map_err(bilibi_database::Error::refused)?,
+                );
                 self.normalize();
             }
             "page" => {
@@ -338,7 +340,10 @@ impl Explorer {
                 self.normalize();
             }
             "grid" => {
-                self.columns.handle(&params::string_values(payload));
+                self.columns.handle(
+                    &params::string_values_checked(payload, params::FIELD_LIMIT)
+                        .map_err(bilibi_database::Error::refused)?,
+                );
             }
             "cancel_assignment" => self.clear_selection(),
             "cancel_confirmation" => self.pending = None,
@@ -397,7 +402,7 @@ impl Explorer {
                     self.message(StatusKind::Error, "The assignment is unavailable.");
                 }
             }
-            "review_assignment" => self.review(payload),
+            "review_assignment" => self.review(payload)?,
             "confirm_assignment" => {
                 // The confirmation payload never chooses a company, record or date.
                 match self.pending.take() {
@@ -444,12 +449,13 @@ impl Explorer {
         }
         Ok(())
     }
-    fn review(&mut self, payload: &Value) {
+    fn review(&mut self, payload: &Value) -> bilibi_database::Result<()> {
         // A duplicate submit cannot replace an already-reviewed operation.
         if self.pending.is_some() {
-            return;
+            return Ok(());
         }
-        self.values = params::form_values(payload, "assignment");
+        self.values = params::form_values_checked(payload, "assignment", params::FIELD_LIMIT)
+            .map_err(bilibi_database::Error::refused)?;
         self.errors.clear();
         match self.selection {
             Some(Selection::Assign { company, position }) => {
@@ -509,6 +515,7 @@ impl Explorer {
             }
             None => self.message(StatusKind::Error, "The assignment is unavailable."),
         }
+        Ok(())
     }
     fn value(&self, key: &str) -> &str {
         self.values.get(key).map_or("", String::as_str)

@@ -483,19 +483,30 @@ impl Operations {
             "cancel" => self.clear(),
             "filters" => {
                 self.clear();
-                self.list
-                    .apply_filters(&params::form_values(payload, "filters"));
+                self.list.apply_filters(
+                    &params::form_values_checked(payload, "filters", params::FIELD_LIMIT)
+                        .map_err(bilibi_database::Error::refused)?,
+                );
                 self.normalize();
                 self.columns = queue_columns(self.tab())?;
             }
             "grid" => {
-                self.columns.handle(&params::string_values(payload));
+                self.columns.handle(
+                    &params::string_values_checked(payload, params::FIELD_LIMIT)
+                        .map_err(bilibi_database::Error::refused)?,
+                );
             }
             "batches_grid" => {
-                self.batches_columns.handle(&params::string_values(payload));
+                self.batches_columns.handle(
+                    &params::string_values_checked(payload, params::FIELD_LIMIT)
+                        .map_err(bilibi_database::Error::refused)?,
+                );
             }
             "waiting_grid" => {
-                self.waiting_columns.handle(&params::string_values(payload));
+                self.waiting_columns.handle(
+                    &params::string_values_checked(payload, params::FIELD_LIMIT)
+                        .map_err(bilibi_database::Error::refused)?,
+                );
             }
             "handoff" => {
                 if self.pending.is_some() {
@@ -564,7 +575,8 @@ impl Operations {
                 if self.pending.is_some() {
                     return Ok(());
                 }
-                self.values = params::form_values(payload, "decision");
+                self.values = params::form_values_checked(payload, "decision", params::FIELD_LIMIT)
+                    .map_err(bilibi_database::Error::refused)?;
                 if let Some(selection) = self.selection.clone() {
                     if matches!(selection.action, Action::Reject)
                         && self.value("decision_reason").trim().is_empty()

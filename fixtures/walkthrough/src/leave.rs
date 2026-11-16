@@ -116,7 +116,6 @@ fn dec(text: &str) -> Decimal {
 /// The Leave walkthrough for Company 001 (`company`), where the manager and
 /// Sam Staff are working employees, and Company 002 (`other_company`),
 /// where the contractor is.
-#[allow(clippy::too_many_arguments)]
 pub(crate) async fn run(
     services: &Services,
     client: &tokio_postgres::Client,

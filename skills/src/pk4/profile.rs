@@ -179,11 +179,11 @@ impl ProfilePage {
                 return Ok(false);
             }
             "items_grid" => {
-                self.items.event(p);
+                self.items.event(p)?;
                 return Ok(false);
             }
             "selectors_grid" => {
-                self.selectors.event(p);
+                self.selectors.event(p)?;
                 return Ok(false);
             }
             "put_item" | "remove_item" | "move_item_up" | "move_item_down" | "add_selector"

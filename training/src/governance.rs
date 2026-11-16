@@ -971,7 +971,6 @@ async fn spent(
 ) -> Result<Decimal> {
     Ok(client.query_one("SELECT COALESCE(sum(approved_cost),0) FROM people_training_needs WHERE tenant_id=$1 AND company_id=$2 AND currency=$3 AND status='approved' AND proposed_on BETWEEN $4::text::date AND $5::text::date",&[&scope.tenant(),&company,&currency,&from,&to]).await.map_err(Error::from)?.get(0))
 }
-#[allow(clippy::too_many_arguments)]
 async fn request_decision(
     tx: &mut MutationTransaction<'_>,
     scope: &Scope,
@@ -991,7 +990,6 @@ async fn request_decision(
     )
     .await
 }
-#[allow(clippy::too_many_arguments)]
 async fn plan_decision(
     tx: &mut MutationTransaction<'_>,
     scope: &Scope,

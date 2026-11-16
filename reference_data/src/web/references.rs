@@ -203,9 +203,9 @@ impl References {
         // controls rendered before a grant was revoked.
         self.refresh_access(scope).await?;
         match kind {
-            "entries_grid" => self.columns_event(payload, 0),
-            "aliases_grid" => self.columns_event(payload, 1),
-            "exceptions_grid" => self.columns_event(payload, 2),
+            "entries_grid" => self.columns_event(payload, 0)?,
+            "aliases_grid" => self.columns_event(payload, 1)?,
+            "exceptions_grid" => self.columns_event(payload, 2)?,
             "clear-flash" => {
                 self.flash.clear(payload.get("key").and_then(Value::as_str));
                 self.rows_changed = false;
@@ -224,14 +224,18 @@ impl References {
     }
 
     /// A column operation changes only what is on screen.
-    fn columns_event(&mut self, payload: &Value, table: usize) {
+    fn columns_event(&mut self, payload: &Value, table: usize) -> bilibi_database::Result<()> {
         self.rows_changed = false;
         let columns = match table {
             0 => &mut self.entry_columns,
             1 => &mut self.alias_columns,
             _ => &mut self.exception_columns,
         };
-        let _: ColumnsOutcome = columns.handle(&params::string_values(payload));
+        let _: ColumnsOutcome = columns.handle(
+            &params::string_values_checked(payload, params::FIELD_LIMIT)
+                .map_err(bilibi_database::Error::refused)?,
+        );
+        Ok(())
     }
 
     /// Opens the chosen company's page when the actor may manage it now
@@ -526,7 +530,6 @@ fn or_empty<T>(result: bilibi_people_workforce::Result<Vec<T>>) -> Result<Vec<T>
     }
 }
 
-#[allow(clippy::too_many_arguments)] // one call per table, each naming every part
 fn table(
     id: &str,
     caption: &str,

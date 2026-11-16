@@ -442,7 +442,10 @@ impl State {
             _ => {}
         }
         if let Some(table) = self.tables.values_mut().find(|t| t.event == event) {
-            table.columns.handle(&params::string_values(payload));
+            table.columns.handle(
+                &params::string_values_checked(payload, params::FIELD_LIMIT)
+                    .map_err(bilibi_database::Error::refused)?,
+            );
             return Ok(());
         }
         let writes = if self.operation == "attendance_mappings" {

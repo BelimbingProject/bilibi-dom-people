@@ -187,7 +187,6 @@ impl Performance {
         }
         Ok(saved)
     }
-    #[allow(clippy::too_many_arguments)]
     pub(crate) async fn validate_assignment(
         &self,
         client: &(impl tokio_postgres::GenericClient + Sync),

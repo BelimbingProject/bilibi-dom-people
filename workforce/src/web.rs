@@ -167,7 +167,7 @@ impl SettingsPage {
             "counts_grid" => {
                 self.columns.handle(
                     &params::string_values_checked(payload, params::FIELD_LIMIT)
-                        .map_err(Error::refused)?,
+                        .map_err(bilibi_database::Error::refused)?,
                 );
             }
             "select_company" => {
@@ -196,7 +196,7 @@ impl SettingsPage {
                 drop(client);
                 let selected =
                     params::form_values_checked(payload, "statuses", params::FIELD_LIMIT)
-                        .map_err(Error::refused)?;
+                        .map_err(bilibi_database::Error::refused)?;
                 let statuses: Vec<String> = selected
                     .into_iter()
                     .filter(|(_, v)| v == "true")

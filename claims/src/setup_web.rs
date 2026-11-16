@@ -318,7 +318,10 @@ impl Setup {
             .iter()
             .position(|(_, event_name, _)| *event_name == event)
         {
-            self.columns[i].handle(&params::string_values(payload));
+            self.columns[i].handle(
+                &params::string_values_checked(payload, params::FIELD_LIMIT)
+                    .map_err(bilibi_database::Error::refused)?,
+            );
             return Ok(());
         }
         if event == "cancel_end" {

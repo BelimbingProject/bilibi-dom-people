@@ -151,7 +151,10 @@ impl Submission {
             return Ok(());
         }
         if kind == "open_types_grid" {
-            self.open_columns.handle(&params::string_values(payload));
+            self.open_columns.handle(
+                &params::string_values_checked(payload, params::FIELD_LIMIT)
+                    .map_err(bilibi_database::Error::refused)?,
+            );
             return Ok(());
         }
         if kind == "cancel_withdraw" {
@@ -457,7 +460,6 @@ fn list_state(query: &HashMap<String, String>) -> Result<ListState> {
     )
     .map_err(|_| Error::Internal)
 }
-#[allow(clippy::too_many_arguments)] // Every table names its own empty state and event.
 fn table(
     columns: &ListColumns,
     event: &str,

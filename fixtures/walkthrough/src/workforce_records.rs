@@ -14,7 +14,6 @@ use super::*;
 // mounted.
 // ---------------------------------------------------------------------------
 
-#[allow(clippy::too_many_arguments)]
 async fn pw1(
     services: &Services,
     client: &tokio_postgres::Client,

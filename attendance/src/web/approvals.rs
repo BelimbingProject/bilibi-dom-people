@@ -157,7 +157,7 @@ impl Approvals {
     async fn event(&mut self, scope: &Scope, payload: &Value) -> Result<bool> {
         match text(payload, "type").as_str() {
             "clear-flash" => self.flash.clear(payload),
-            "approvals_grid" => self.table.event(payload),
+            "approvals_grid" => self.table.event(payload)?,
             "dismiss_decision" => self.pending = None,
             "select_company" => {
                 let chosen = params::positive_id(payload.get("company_id").and_then(Value::as_str));

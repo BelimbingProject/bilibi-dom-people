@@ -618,9 +618,10 @@ impl State {
         }
         for index in 0..self.lists.len() {
             if event == format!("grid_{index}") {
-                self.lists[index]
-                    .columns
-                    .handle(&params::string_values(payload));
+                self.lists[index].columns.handle(
+                    &params::string_values_checked(payload, params::FIELD_LIMIT)
+                        .map_err(bilibi_database::Error::refused)?,
+                );
                 return Ok(());
             }
             if event == format!("page_{index}") || (index == 0 && event == "paginate") {
@@ -634,9 +635,10 @@ impl State {
             if event == format!("filter_{index}") || (index == 0 && event == "filter") {
                 self.pending = None;
                 self.selected = None;
-                self.lists[index]
-                    .state
-                    .apply_filters(&params::form_values(payload, "filters"));
+                self.lists[index].state.apply_filters(
+                    &params::form_values_checked(payload, "filters", params::FIELD_LIMIT)
+                        .map_err(bilibi_database::Error::refused)?,
+                );
                 return Ok(());
             }
         }
