@@ -468,9 +468,13 @@ impl Workforce {
         // ProofClient only offers single-row reads; Settings needs ReadClient.
         // Resolve configuration on a short separate checkout, refusing pool
         // saturation rather than waiting while holding an Artifacts checkout.
-        let mut timeouts = self.db.timeouts();
-        timeouts.wait = Some(std::time::Duration::ZERO);
-        let settings_client = self.db.timeout_get(&timeouts).await.map_err(Error::from)?;
+        let settings_client = self
+            .db
+            .try_get_detached(
+                "reads Settings while the caller holds its Artifacts connection; refused at once on a full pool",
+            )
+            .await
+            .map_err(Error::from)?;
         let statuses = self
             .working_statuses_of(&**settings_client, scope, company_id)
             .await?;
