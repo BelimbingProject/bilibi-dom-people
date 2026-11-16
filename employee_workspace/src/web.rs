@@ -480,7 +480,8 @@ impl Employees {
         let Some(company) = self.company.as_ref().map(|c| c.id) else {
             return Ok(());
         };
-        self.form = params::form_values(payload, "employment");
+        self.form = params::form_values_checked(payload, "employment", params::FIELD_LIMIT)
+            .map_err(bilibi_database::Error::refused)?;
         self.errors.clear();
         let Some(person) = self.person else {
             self.errors
@@ -605,8 +606,10 @@ impl Employees {
             }
             "filters" => {
                 let company = self.list.filters.get("company_id").cloned();
-                self.list
-                    .apply_filters(&params::form_values(payload, "filters"));
+                self.list.apply_filters(
+                    &params::form_values_checked(payload, "filters", params::FIELD_LIMIT)
+                        .map_err(bilibi_database::Error::refused)?,
+                );
                 self.list.search = self.list.search.chars().take(200).collect();
                 if company != self.list.filters.get("company_id").cloned() {
                     self.add = false;
@@ -615,14 +618,18 @@ impl Employees {
                 }
             }
             "grid" => {
-                if let ColumnsOutcome::Sort(key) =
-                    self.columns.handle(&params::string_values(payload))
-                {
+                if let ColumnsOutcome::Sort(key) = self.columns.handle(
+                    &params::string_values_checked(payload, params::FIELD_LIMIT)
+                        .map_err(bilibi_database::Error::refused)?,
+                ) {
                     self.list.next_sort(&key);
                 }
             }
             "views_grid" => {
-                self.view_columns.handle(&params::string_values(payload));
+                self.view_columns.handle(
+                    &params::string_values_checked(payload, params::FIELD_LIMIT)
+                        .map_err(bilibi_database::Error::refused)?,
+                );
             }
             "open_add" => self.open_add(scope).await?,
             "cancel_add" => {

@@ -26,7 +26,6 @@ fn leave_error(error: LeaveError) -> Error {
     eprintln!("PL2 unexpected refusal: {error:?}");
     Error::Internal
 }
-#[allow(clippy::too_many_arguments)]
 async fn opening(
     leave: &Leave,
     scope: &Scope,
@@ -56,7 +55,6 @@ async fn opening(
         .map_err(leave_error)?;
     Ok(())
 }
-#[allow(clippy::too_many_arguments)]
 pub(crate) async fn run(
     services: &Services,
     db: &Db,

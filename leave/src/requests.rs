@@ -650,7 +650,6 @@ async fn lock(
     let row = client.query_opt(&format!("SELECT {COLUMNS} FROM people_leave_applications WHERE tenant_id=$1 AND company_id=$2 AND id=$3 FOR UPDATE"), &[&scope.tenant(), &company, &id]).await.map_err(Error::from)?.ok_or(LeaveError::NotFound)?;
     read(&row)
 }
-#[allow(clippy::too_many_arguments)]
 async fn covered(
     client: &(impl GenericClient + Sync),
     scope: &Scope,

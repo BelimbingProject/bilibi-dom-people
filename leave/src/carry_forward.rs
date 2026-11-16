@@ -292,7 +292,6 @@ impl Leave {
         Ok(job)
     }
 }
-#[allow(clippy::too_many_arguments)]
 async fn blocking_year(
     client: &(impl GenericClient + Sync),
     scope: &Scope,

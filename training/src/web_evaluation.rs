@@ -277,7 +277,10 @@ impl Reviews {
     ) -> DbResult<Option<(StatusKind, String)>> {
         let event = payload.get("type").and_then(Value::as_str).unwrap_or("");
         if event == self.event_name("evaluation_grid", "review_grid") {
-            self.columns.handle(&params::string_values(payload));
+            self.columns.handle(
+                &params::string_values_checked(payload, params::FIELD_LIMIT)
+                    .map_err(bilibi_database::Error::refused)?,
+            );
             return Ok(None);
         }
         if event == self.event_name("evaluation_page", "page") {
@@ -286,8 +289,10 @@ impl Reviews {
             return Ok(None);
         }
         if event == self.event_name("evaluation_filters", "review_filters") {
-            self.list
-                .apply_filters(&params::form_values(payload, "filters"));
+            self.list.apply_filters(
+                &params::form_values_checked(payload, "filters", params::FIELD_LIMIT)
+                    .map_err(bilibi_database::Error::refused)?,
+            );
             return Ok(None);
         }
         if event == self.event_name("close_evaluation", "close_answer") {

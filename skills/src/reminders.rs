@@ -194,7 +194,6 @@ pub(super) async fn compute(
     Ok(due)
 }
 
-#[allow(clippy::too_many_arguments)]
 pub(super) async fn claim(
     skills: &Skills,
     scope: &Scope,

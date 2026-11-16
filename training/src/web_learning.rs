@@ -843,19 +843,27 @@ impl Learning {
             return Ok(());
         }
         if event == "grid" {
-            self.columns.handle(&params::string_values(payload));
+            self.columns.handle(
+                &params::string_values_checked(payload, params::FIELD_LIMIT)
+                    .map_err(bilibi_database::Error::refused)?,
+            );
             return Ok(());
         }
         if let Some(key) = event.strip_prefix("nested-") {
             if let Some(c) = self.nested_columns.get_mut(key) {
-                c.handle(&params::string_values(payload));
+                c.handle(
+                    &params::string_values_checked(payload, params::FIELD_LIMIT)
+                        .map_err(bilibi_database::Error::refused)?,
+                );
             }
             return Ok(());
         }
         if matches!(event, "select_company" | "filters") {
             let old = self.company;
-            self.list
-                .apply_filters(&params::form_values(payload, "filters"));
+            self.list.apply_filters(
+                &params::form_values_checked(payload, "filters", params::FIELD_LIMIT)
+                    .map_err(bilibi_database::Error::refused)?,
+            );
             self.load(scope).await?;
             if old != self.company || self.task.kind() == "request" {
                 self.modal = false;
@@ -920,7 +928,7 @@ impl Learning {
                 }
             },
             "decide"=> {
-                let values=params::form_values(payload,"decision");
+                let values=params::form_values_checked(payload,"decision", params::FIELD_LIMIT).map_err(bilibi_database::Error::refused)?;
                 let id=params::positive_id(values.get("id").map(String::as_str));
                 let action=values.get("action").map(String::as_str).unwrap_or("");
                 let eligible=self.records.iter().find(|r|Some(r.id())==id).and_then(|r|self.actions(r).into_iter().find(|(_,a,_)|*a==action));

@@ -282,13 +282,18 @@ impl Effectiveness {
         }
         if let Some(key) = event.strip_prefix("table-") {
             if let Some(columns) = self.columns.get_mut(key) {
-                columns.handle(&params::string_values(payload));
+                columns.handle(
+                    &params::string_values_checked(payload, params::FIELD_LIMIT)
+                        .map_err(bilibi_database::Error::refused)?,
+                );
             }
             return Ok(());
         }
         if matches!(event, "select_company" | "filters") {
-            self.list
-                .apply_filters(&params::form_values(payload, "filters"));
+            self.list.apply_filters(
+                &params::form_values_checked(payload, "filters", params::FIELD_LIMIT)
+                    .map_err(bilibi_database::Error::refused)?,
+            );
             self.reviews.list.page = 1;
             self.reset();
             return Ok(());

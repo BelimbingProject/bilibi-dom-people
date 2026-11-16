@@ -620,7 +620,6 @@ pub async fn run(url: &str) -> Result<()> {
 }
 
 /// Exercise the numeric boundary and a real lookup spanning two 1,000-ID pages.
-#[allow(clippy::too_many_arguments)]
 async fn bounds_and_pages(
     services: &Services,
     manager: &bilibi_tenancy::Scope,

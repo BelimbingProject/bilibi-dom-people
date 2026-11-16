@@ -216,20 +216,27 @@ impl Insights {
         }
         Ok(())
     }
-    fn event(&mut self, payload: &Value) {
+    fn event(&mut self, payload: &Value) -> bilibi_database::Result<()> {
         let event = payload.get("type").and_then(Value::as_str).unwrap_or("");
         match event {
             "grid" => {
-                self.columns.handle(&params::string_values(payload));
+                self.columns.handle(
+                    &params::string_values_checked(payload, params::FIELD_LIMIT)
+                        .map_err(bilibi_database::Error::refused)?,
+                );
             }
             "drill_grid" => {
-                self.drill_columns.handle(&params::string_values(payload));
+                self.drill_columns.handle(
+                    &params::string_values_checked(payload, params::FIELD_LIMIT)
+                        .map_err(bilibi_database::Error::refused)?,
+                );
             }
             "page" => self
                 .list
                 .put_page(payload.get("page").and_then(Value::as_str)),
             "filter" | "filters" => {
-                let values = params::form_values(payload, "filters");
+                let values = params::form_values_checked(payload, "filters", params::FIELD_LIMIT)
+                    .map_err(bilibi_database::Error::refused)?;
                 let changed = values
                     .get("company_id")
                     .is_some_and(|v| v != self.value("company_id"));
@@ -242,6 +249,7 @@ impl Insights {
             }
             _ => {}
         }
+        Ok(())
     }
     fn render(&self) -> DbResult<String> {
         let mut controls = vec![ToolbarControl::select(
@@ -404,7 +412,7 @@ impl LiveState<Scope, Error> for Insights {
                 LiveInput::Params(query) => {
                     self.list = Self::new(self.training.clone(), query)?.list
                 }
-                LiveInput::Event(payload) => self.event(payload),
+                LiveInput::Event(payload) => self.event(payload)?,
             }
             self.load(req.scope).await?;
             Ok(LiveBody {

@@ -166,9 +166,9 @@ impl My {
         let kind = text(payload, "type");
         match kind.as_str() {
             "clear-flash" => self.flash.clear(payload),
-            "balances_grid" => self.balances_table.event(payload),
-            "requests_grid" => self.requests_table.event(payload),
-            "history_grid" => self.history_table.event(payload),
+            "balances_grid" => self.balances_table.event(payload)?,
+            "requests_grid" => self.requests_table.event(payload)?,
+            "history_grid" => self.history_table.event(payload)?,
             "dismiss_cancel" => self.pending = None,
             "submit_request" | "cancel_request" | "confirm_cancel" => {
                 let Some(company) = self.authorized(scope).await? else {

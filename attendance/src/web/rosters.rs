@@ -190,7 +190,7 @@ impl Rosters {
     async fn event(&mut self, scope: &Scope, payload: &Value) -> Result<bool> {
         match text(payload, "type").as_str() {
             "clear-flash" => self.flash.clear(payload),
-            "roster_grid" => self.table.event(payload),
+            "roster_grid" => self.table.event(payload)?,
             "dismiss_publish" => self.pending = None,
             "select_company" => {
                 self.load(scope, false).await?;
@@ -206,7 +206,8 @@ impl Rosters {
                 return Ok(true);
             }
             "filter" => {
-                let mut posted = params::string_values(payload);
+                let mut posted = params::string_values_checked(payload, params::FIELD_LIMIT)
+                    .map_err(bilibi_database::Error::refused)?;
                 if let Some(q) = posted.remove("q") {
                     posted.insert("search".into(), q);
                 }

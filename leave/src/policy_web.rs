@@ -399,7 +399,10 @@ impl Policies {
                     "policies_grid" => &mut self.policies_table,
                     _ => &mut self.skips_table,
                 };
-                table.columns.handle(&params::string_values(payload));
+                table.columns.handle(
+                    &params::string_values_checked(payload, params::FIELD_LIMIT)
+                        .map_err(bilibi_database::Error::refused)?,
+                );
                 return Ok(());
             }
             "cancel_confirmation" => {

@@ -319,7 +319,10 @@ impl State {
         let event = payload.get("type").and_then(Value::as_str).unwrap_or("");
         if let Some(table) = event.strip_prefix("grid-") {
             if let Some(columns) = self.tables.get_mut(table) {
-                columns.handle(&params::string_values(payload));
+                columns.handle(
+                    &params::string_values_checked(payload, params::FIELD_LIMIT)
+                        .map_err(bilibi_database::Error::refused)?,
+                );
             }
             return Ok(());
         }
@@ -351,8 +354,10 @@ impl State {
             }
             "filter" | "filters" => {
                 self.pending = None;
-                self.list
-                    .apply_filters(&params::form_values(payload, "filters"));
+                self.list.apply_filters(
+                    &params::form_values_checked(payload, "filters", params::FIELD_LIMIT)
+                        .map_err(bilibi_database::Error::refused)?,
+                );
             }
             "paginate" | "page" => {
                 self.pending = None;
@@ -385,7 +390,8 @@ impl State {
             }
             "draft" => {
                 self.draft_error = None;
-                self.values = params::form_values(payload, "policy");
+                self.values = params::form_values_checked(payload, "policy", params::FIELD_LIMIT)
+                    .map_err(bilibi_database::Error::refused)?;
                 let company = scope.current_company().ok_or(Error::Invalid)?.get();
                 match self.draft_input() {
                     Ok(input) => match self.progression.draft(scope, company, &input).await {

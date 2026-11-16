@@ -502,11 +502,15 @@ impl State {
                 return Ok(false);
             }
             "grid" => {
-                self.columns.handle(&params::string_values(payload));
+                self.columns.handle(
+                    &params::string_values_checked(payload, params::FIELD_LIMIT)
+                        .map_err(bilibi_database::Error::refused)?,
+                );
                 return Ok(false);
             }
             "select_company" => {
-                let values = params::form_values(payload, "company");
+                let values = params::form_values_checked(payload, "company", params::FIELD_LIMIT)
+                    .map_err(bilibi_database::Error::refused)?;
                 self.company = params::positive_id(values.get("company_id").map(String::as_str));
                 self.pending = None;
                 self.form.clear();
@@ -520,7 +524,8 @@ impl State {
         let company = self.company.ok_or(Error::Invalid)?;
         match event {
             "save_rules" | "create" => {
-                self.form = params::form_values(payload, "form");
+                self.form = params::form_values_checked(payload, "form", params::FIELD_LIMIT)
+                    .map_err(bilibi_database::Error::refused)?;
                 let result = self.create(scope, company).await;
                 match result {
                     Ok(()) => {
@@ -581,7 +586,8 @@ impl State {
                 }
             }
             "end_date" => {
-                let values = params::string_values(payload);
+                let values = params::string_values_checked(payload, params::FIELD_LIMIT)
+                    .map_err(bilibi_database::Error::refused)?;
                 if let (Some(id), Some(date)) = (
                     values.get("rule_id").and_then(|s| s.parse::<i64>().ok()),
                     values
