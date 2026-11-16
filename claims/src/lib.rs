@@ -34,6 +34,7 @@ mod assignments;
 mod catalog;
 mod contributions;
 mod downloads;
+mod follow_up;
 mod handoff;
 mod money;
 mod operations_web;
