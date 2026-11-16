@@ -90,7 +90,7 @@ inventory::submit! { Contribution::new(DEFINITIONS, "people/claims.follow_up", p
 inventory::submit! { Contribution::new(OFFERED_CAPABILITIES, "rules:people/claims", provenance!(), &OfferedCapabilities { principal: "rules", capabilities: &[READ, MANAGE] }) }
 inventory::submit! { Contribution::new(bilibi_agent_api::job::PRINCIPAL_WRITES, KEY, provenance!(), &bilibi_agent_api::job::PrincipalWrite { principals: &["rules"] }) }
 inventory::submit! { Contribution::new(TRIGGERS, EVENT, provenance!(), &Trigger { on: On { event: EVENT, versions: &[1] }, title: "A claim is approved", table: TABLE, subject: "/claim_id", logical_event: None, version: "revision" }) }
-inventory::submit! { Contribution::new(ACTIONS, KEY, provenance!(), &Action { title: "Create a follow-up task", table: TABLE, subject: "record_id", version: "expected_revision", records: &[] }) }
+inventory::submit! { Contribution::new(ACTIONS, KEY, provenance!(), &Action { title: "Create a follow-up task", table: TABLE, subject: "record_id", version: "expected_revision", records: &[], approval_capabilities: &[bilibi_activity::MANAGE] }) }
 
 static GRID: GridContribution = GridContribution {
     tables: &[TableDecl::new(TABLE, "Claims", READ,
