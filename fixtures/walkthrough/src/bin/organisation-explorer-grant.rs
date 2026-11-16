@@ -3,7 +3,7 @@
 //! Organisation page stays open. Never use against a real installation.
 use bilibi_authz::grants::Grants;
 use bilibi_database::{pool, Error, Result};
-use bilibi_module_registry::{verify_composition, Services};
+use bilibi_module_registry::Services;
 use bilibi_people_organisation::MANAGE;
 use bilibi_tenancy::Authentication;
 use std::sync::Arc;
@@ -21,6 +21,7 @@ async fn main() -> Result<()> {
     bilibi_domains::link();
     bilibi_extensions::link();
     let db = pool(&url)?;
+    bilibi_web::verify_composition(&db).await?;
     // Refuse any database that does not have this walkthrough's cast.
     let client = db.get().await?;
     let fixture: bool = client.query_one(
@@ -31,11 +32,6 @@ async fn main() -> Result<()> {
         return Err(Error::Invalid);
     }
     let modules = bilibi_module_registry::discover()?;
-    verify_composition(
-        &modules,
-        bilibi_domains::MODULES,
-        bilibi_extensions::MODULES,
-    )?;
     let mut services = Services::default();
     services.provide("bootstrap.database", Arc::new(db.clone()))?;
     services.provide("bootstrap.composition", Arc::new(bilibi_web::composition()))?;
