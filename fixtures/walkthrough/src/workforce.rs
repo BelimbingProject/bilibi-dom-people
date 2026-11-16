@@ -1,6 +1,5 @@
 //! Shared Workforce setup on a freshly created disposable database.
 use super::*;
-use bilibi_module_registry::verify_composition;
 
 /// Runs the walkthrough against `url`, a freshly created disposable database.
 pub(super) async fn prepare(url: &str) -> Result<crate::Context> {
@@ -10,11 +9,7 @@ pub(super) async fn prepare(url: &str) -> Result<crate::Context> {
     bilibi_extensions::link();
     let db = pool(url)?;
     let modules = bilibi_module_registry::discover()?;
-    verify_composition(
-        &modules,
-        bilibi_domains::MODULES,
-        bilibi_extensions::MODULES,
-    )?;
+    bilibi_web::verify_composition(&db).await?;
     let migrated = bilibi_database::migrate(&db, &modules).await?;
     println!(
         "mounted Domain modules: {:?}; {} migration(s) applied",
