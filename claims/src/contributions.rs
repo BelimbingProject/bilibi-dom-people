@@ -28,7 +28,14 @@ pub const APPROVE: &str = "people.claims.approve";
 /// Pays claims, hands them off and exports a batch.
 pub const REIMBURSE: &str = "people.claims.reimburse";
 /// Every Claims capability; Bilimbi grants all four to the Tenant Owner role.
-pub const CAPABILITIES: [&str; 4] = [SUBMIT, MANAGE, APPROVE, REIMBURSE];
+pub const CAPABILITIES: [&str; 6] = [
+    SUBMIT,
+    MANAGE,
+    APPROVE,
+    REIMBURSE,
+    crate::follow_up::MANAGE,
+    "people.claims.followup.view",
+];
 
 /// The company-scoped setting listing the ISO 4217 codes the company accepts
 /// on claims; default none.
@@ -48,12 +55,14 @@ inventory::submit! {
     Module {
         id: MODULE,
         layer: Layer::Domains,
-        dependencies: &[
+        dependencies: &["base/records","base/rules","base/grid","core/activity",
             "base/agent_api", "base/authz", "base/menu", "base/database", "base/datetime", "base/events", "base/ui", "base/module_registry",
             "base/party_ids", "base/settings", "base/system", "base/tenancy", "core/company",
             bilibi_people_settings::MODULE, bilibi_people_workforce::MODULE,
         ],
         migrations: &[
+
+
             (
                 "people-claims-001-catalog-policies-requests",
                 include_str!("../migrations/001-catalog-policies-requests.sql"),
@@ -66,7 +75,8 @@ inventory::submit! {
                 "people-claims-003-workflow-history",
                 include_str!("../migrations/003-workflow-history.sql"),
             ),
-        ],
+        ("people-claims-004-rule-revision", include_str!("../migrations/004-rule-revision.sql")),
+],
         services: &[Service {
             id: SERVICE,
             factory: |services| {
@@ -103,7 +113,7 @@ inventory::submit! {
     Contribution::new(VOCABULARY, "people/claims.vocabulary", provenance!(), &VocabularyContribution {
         domains: &["people"],
         verbs: &["submit", "approve", "reimburse"],
-        capabilities: &[C::tenant(SUBMIT), C::tenant(MANAGE), C::tenant(APPROVE), C::tenant(REIMBURSE)],
+        capabilities: &[C::tenant(SUBMIT), C::tenant(MANAGE), C::tenant(APPROVE), C::tenant(REIMBURSE), C::tenant(crate::follow_up::MANAGE), C::tenant("people.claims.followup.view")],
         roles: &[RoleDefinition {
             code: "tenant_owner",
             name: "Tenant Owner",
