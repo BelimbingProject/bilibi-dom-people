@@ -81,7 +81,7 @@ pub(super) async fn run(
         users: &users,
         token: &login.token,
     };
-    let client = db.get().await?;
+    let mut client = db.get().await?;
     let scope = users.sessions.check(&**client, &login.token).await?;
     let leave_type = leave
         .create_type(
@@ -108,7 +108,7 @@ pub(super) async fn run(
     let input = json!({"company_id":company,"employee_id":employee,"leave_type_id":leave_type.id,"entry_type":"opening","quantity":"5.25","occurred_on":"2026-07-01","source":"pl5-proof","entry_key":"opening","note":"  Opening proof  "});
     println!(
         "direct write: {:?}",
-        registry.call(&**client, &scope, KEY, &input).await
+        registry.call(&mut **client, &scope, KEY, &input).await
     );
     let ops = [op(input.clone())];
     let _review = preview(&plans, &browser, &ops).await?;
