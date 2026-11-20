@@ -55,7 +55,7 @@ inventory::submit! {
     Module {
         id: MODULE,
         layer: Layer::Domains,
-        dependencies: &["base/records","base/rules","base/grid","core/activity",
+        dependencies: &["base/records","base/watchers","base/grid","core/activity",
             "base/agent_api", "base/authz", "base/menu", "base/database", "base/datetime", "base/events", "base/ui", "base/module_registry",
             "base/party_ids", "base/settings", "base/system", "base/tenancy", "core/company",
             bilibi_people_settings::MODULE, bilibi_people_workforce::MODULE,
