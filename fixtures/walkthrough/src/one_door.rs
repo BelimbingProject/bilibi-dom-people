@@ -6,9 +6,10 @@ use bilibi_database::{pool, Error, Result};
 use bilibi_module_registry::Services;
 use bilibi_people_workforce::{NewEmployment, Workforce};
 use bilibi_tenancy::{ProofFuture, Scope};
-use bilibi_user::UserService;
+use bilibi_user::{InvitationInput, UserService};
 use serde_json::{json, Value};
 use std::sync::Arc;
+use std::time::Duration;
 use tokio_postgres::Transaction;
 
 struct Browser<'a> {
@@ -28,6 +29,51 @@ impl PlanAuthority for Browser<'_> {
 fn fail(e: impl std::fmt::Display) -> Error {
     eprintln!("one-door proof: {e}");
     Error::Invalid
+}
+async fn invited_account(
+    services: &Services,
+    users: &UserService,
+    admin: &Scope,
+    name: &str,
+    email: &str,
+) -> Result<i64> {
+    let mailer = services.get::<bilibi_mail::Mailer>(bilibi_mail::SERVICE)?;
+    let mailbox = mailer.dev_mailbox().ok_or(Error::Invalid)?;
+    let before = mailbox.entries().map_err(|_| Error::Internal)?.len();
+    let invitation = users
+        .invite_member(
+            admin,
+            &InvitationInput {
+                name: name.into(),
+                email: email.into(),
+                roles: Vec::new(),
+            },
+        )
+        .await
+        .map_err(fail)?;
+    for _ in 0..50 {
+        let entries = mailbox.entries().map_err(|_| Error::Internal)?;
+        if entries.len() > before {
+            let message = mailbox
+                .read(&entries.first().ok_or(Error::Internal)?.id)
+                .map_err(|_| Error::Internal)?;
+            let token = message
+                .lines()
+                .find(|line| line.starts_with("http"))
+                .and_then(|link| link.rsplit('/').next())
+                .filter(|token| token.len() == 64)
+                .ok_or(Error::Internal)?;
+            let accepted = users
+                .accept_new_member_invitation(token, "bilibi-dev")
+                .await
+                .map_err(fail)?;
+            return (accepted == invitation.user)
+                .then_some(accepted)
+                .ok_or(Error::Internal);
+        }
+        tokio::time::sleep(Duration::from_millis(100)).await;
+    }
+    Err(Error::Internal)
 }
 async fn operation(services: &Services, email: &str, key: &str, input: Value) -> Result<()> {
     let users = services.get::<UserService>("core/user.accounts")?;
@@ -95,19 +141,14 @@ async fn account(
         .await
         .map_err(fail)?;
     let users = services.get::<UserService>("core/user.accounts")?;
-    let user = users
-        .create_account(
-            admin,
-            &bilibi_user::AccountInput {
-                name: name.into(),
-                email: email.into(),
-                password: "bilibi-dev".into(),
-                person: Some(person.id),
-                company: Some(bilibi_party_ids::OrganisationId::new(company).map_err(fail)?),
-            },
-        )
+    let user = invited_account(services, &users, admin, name, email).await?;
+    users
+        .link_person(admin, user, person.id)
         .await
         .map_err(fail)?;
+    users
+        .set_desk(admin, company, person.id.get(), true)
+        .await?;
     let workforce = services.get::<Workforce>(bilibi_people_workforce::SERVICE)?;
     let mut input = NewEmployment::new(
         person.id.get(),
@@ -121,7 +162,7 @@ async fn account(
         .create_employment(admin, company, &input)
         .await
         .map_err(fail)?;
-    Ok((user.id, employment.id))
+    Ok((user, employment.id))
 }
 async fn login_scope(services: &Services, email: &str) -> Result<Scope> {
     let users = services.get::<UserService>("core/user.accounts")?;
